@@ -682,7 +682,7 @@
                             <option value="sin-ayuda" selected>Mesa sin ayuda (marcado manual)</option>
                         </select>
                         <button class="btn" id="newBoardBtn">Nueva Mesa</button>
-                        <a href="otrojugador.html" class="btn">Abrir Segundo Jugador</a>
+                        <a href="otrojugador.html?gameId=<?php echo isset($_GET['gameId']) ? $_GET['gameId'] : LoteriaApp.estado.gameId; ?>" class="btn" id="secondPlayerLink">Abrir Segundo Jugador</a>
                     </div>
                     <div class="board-message" id="boardMessage"></div>
                 </div>
@@ -822,6 +822,14 @@
                 this.inicializarEfectos();
                 this.mostrarCarta(this.estado.cartasDisponibles[0].numero);
                 this.inicializarFirebase();
+                this.actualizarEnlaceSegundoJugador();
+            },
+
+            actualizarEnlaceSegundoJugador: function() {
+                const enlace = document.getElementById('secondPlayerLink');
+                if (enlace) {
+                    enlace.href = `otrojugador.html?gameId=${this.estado.gameId}`;
+                }
             },
 
             inicializarFirebase: function() {
@@ -845,6 +853,8 @@
                     }
                     this.actualizarEstadoConexion(true);
                 });
+
+                window.addEventListener('load', () => LoteriaApp.inicializar());
                 
                 // Manejar desconexión
                 this.estado.gameRef.onDisconnect().update({

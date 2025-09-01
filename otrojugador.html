@@ -693,8 +693,16 @@
                 this.estado.gameId = urlParams.get('gameId');
                 
                 if (!this.estado.gameId) {
-                    alert('No se ha especificado un ID de juego. Abre este enlace desde el primer jugador.');
-                    return;
+                    // Si no hay ID en la URL, intentar obtenerlo del almacenamiento local
+                    this.estado.gameId = localStorage.getItem('loteriaGameId');
+                    
+                    if (!this.estado.gameId) {
+                        alert('No se ha especificado un ID de juego. Abre este enlace desde el primer jugador.');
+                        return;
+                    }
+                } else {
+                    // Guardar el ID en el almacenamiento local para futuras visitas
+                    localStorage.setItem('loteriaGameId', this.estado.gameId);
                 }
                 
                 // Referencia a la sala de juego en Firebase
