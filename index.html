@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotería Mexicana - Inicio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --color-primary: #006847; /* Verde bandera */
+            --color-secondary: #ffde00; /* Dorado para contraste */
+            --color-text-light: #f0f0f0;
+            --color-text-dark: #333;
+            --color-bg-dark: #121212;
+            --color-bg-container: #1e1e1e;
+            --color-marcado: #c8102e; /* Rojo bandera para las marcas */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* New Matrix & Particle Effects */
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .matrix-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            opacity: 0.1;
+        }
+        .matrix-background .column {
+            position: absolute;
+            width: 20px;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 10px;
+            white-space: nowrap;
+            animation: matrix-fall linear infinite;
+        }
+
+        .particle-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 2;
+        }
+        .particle {
+            position: absolute;
+            background-color: var(--color-primary);
+            opacity: 0.2;
+            border-radius: 50%;
+            animation: particle-float linear infinite;
+        }
+        
+        /* Floating elements animation - Slightly modified */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            overflow: hidden;
+        }
+        .floating-element {
+            position: absolute;
+            background-color: var(--color-primary);
+            opacity: 0.15;
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: float 20s infinite ease-in-out;
+        }
+        .floating-element:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 10%; animation-delay: 5s; }
+        .floating-element:nth-child(3) { width: 100px; height: 100px; top: 40%; right: 25%; animation-delay: 10s; }
+        .floating-element:nth-child(4) { width: 250px; height: 250px; bottom: 5%; left: 30%; animation-delay: 15s; }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            50% { transform: translateY(-30px) rotate(180deg) scale(1.1); }
+            100% { transform: translateY(0) rotate(360deg) scale(1); }
+        }
+
+        /* Container and content styling */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            position: relative;
+            z-index: 4; /* Main content is on top */
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .logo {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: var(--color-secondary);
+            text-shadow: 3px 3px 0 var(--color-marcado);
+            animation: pulse 2s infinite;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-primary);
+            text-shadow: 2px 2px 0 var(--color-marcado);
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            width: 300px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: slideUp 1s ease-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px) scale(1.05); /* Added scale for more pop */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card i {
+            font-size: 3rem;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--color-secondary);
+        }
+        
+        .card p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+            animation: fadeIn 1.5s ease-out;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 18px 36px;
+            background: linear-gradient(45deg, var(--color-primary), #119565);
+            color: var(--color-bg-dark);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 104, 71, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05); /* Added scale to match cards */
+            box-shadow: 0 6px 15px rgba(0, 104, 71, 0.6);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(45deg, #c8102e, #ff5252);
+            color: white;
+            box-shadow: 0 4px 10px rgba(200, 16, 46, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 15px rgba(200, 16, 46, 0.6);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--color-bg-container);
+            color: var(--color-text-light);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 4;
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 3rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            .content {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        /* New Keyframe Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes matrix-fall {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        @keyframes particle-float {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(var(--random-x), var(--random-y)); }
+            100% { transform: translate(0, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay">
+        <div class="matrix-background" id="matrix-bg"></div>
+        <div class="particle-background" id="particle-bg"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-hat-cowboy-side"></i>
+            </div>
+            <h1>Lotería Mexicana</h1>
+            <p class="subtitle">¡Un juego tradicional con tecnología moderna!</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <i class="fas fa-users"></i>
+                <h2>Modo de un jugador</h2>
+                <p>Juega solo y desafíate a completar tu tablero antes de que se acaben las cartas.</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-wifi"></i>
+                <h2>Multijugador</h2>
+                <p>Juega con amigos y familiares en tiempo real gracias a la integración con Firebase para una experiencia compartida.</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-paint-brush"></i>
+                <h2>Diseño Tradicional</h2>
+                <p>Disfruta de un diseño que rinde homenaje a la estética tradicional mexicana con colores vibrantes y elementos culturales.</p>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <a href="cartamesa.html" class="btn">Jugar Ahora</a>
+            <a href="instrucciones.html" class="btn btn-secondary">Instrucciones</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 Lotería Mexicana Digital - Un juego tradicional con tecnología moderna</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const matrixBg = document.getElementById('matrix-bg');
+            const particleBg = document.getElementById('particle-bg');
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%^&*()_+-={}[]|;:<>,./?';
+            const numColumns = Math.floor(window.innerWidth / 20);
+
+            // Matrix Effect
+            for (let i = 0; i < numColumns; i++) {
+                const column = document.createElement('div');
+                column.className = 'column';
+                column.style.left = `${i * 20}px`;
+                column.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                column.style.animationDelay = `${Math.random() * 5}s`;
+                column.innerHTML = Array(Math.floor(Math.random() * 30 + 15)).fill().map(() => characters[Math.floor(Math.random() * characters.length)]).join('<br>');
+                matrixBg.appendChild(column);
+            }
+
+            // Particle Effect
+            const numParticles = 50;
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 10 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
+                particle.style.animationDelay = `${Math.random() * 10}s`;
+                particle.style.setProperty('--random-x', `${Math.random() * 200 - 100}px`);
+                particle.style.setProperty('--random-y', `${Math.random() * 200 - 100}px`);
+                particleBg.appendChild(particle);
+            }
+        });
+    </script>
+</body>
+</html>

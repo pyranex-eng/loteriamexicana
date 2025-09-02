@@ -8,13 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --color-primary: #d40000;
-            --color-secondary: #ff4040;
+            --color-primary: #c8102e; /* Rojo bandera para el segundo jugador */
+            --color-secondary: #ffde00; /* Dorado para contraste */
             --color-text-light: #f0f0f0;
             --color-text-dark: #333;
             --color-bg-dark: #121212;
             --color-bg-container: #1e1e1e;
-            --color-marcado: #ffeb3b;
+            --color-marcado: #006847; /* Verde bandera para las marcas */
+            --color-player1: #006847; /* Color para el primer jugador */
+            --color-sobrante: #ff4444; /* Color para cartas sobrantes */
+            --color-auto-mark: #ff9800; /* Color para marcado automático */
         }
 
         body {
@@ -70,7 +73,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at center, rgba(212, 0, 0, 0.2) 0%, transparent 40%);
+            background: radial-gradient(circle at center, rgba(200, 16, 46, 0.2) 0%, transparent 40%);
             z-index: 2;
             pointer-events: none;
             transition: all 0.1s ease-out;
@@ -91,7 +94,7 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            color: #f00;
+            color: var(--color-primary);
             font-family: 'Courier New', Courier, monospace;
             font-size: 2rem;
             text-align: center;
@@ -106,11 +109,11 @@
         }
 
         .loteria-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 40px auto;
             background-color: var(--color-bg-container);
             border-radius: 15px;
-            box-shadow: 0 0 30px rgba(212, 0, 0, 0.3);
+            box-shadow: 0 0 30px rgba(200, 16, 46, 0.3);
             padding: 30px;
             position: relative;
             z-index: 10;
@@ -126,105 +129,31 @@
             color: var(--color-primary);
             margin-bottom: 20px;
             font-size: 3rem;
-            text-shadow: 2px 2px 5px rgba(212, 0, 0, 0.5);
+            text-shadow: 2px 2px 5px rgba(200, 16, 46, 0.5);
             transition: all 0.5s ease;
         }
 
         .main-content {
             display: flex;
-            justify-content: center;
+            justify-content: space-around;
             gap: 30px;
             flex-wrap: wrap;
         }
 
-        .board-section {
+        .info-section, .board-section {
             flex: 1;
             min-width: 300px;
         }
 
-        .controls-wrapper {
+        .info-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 15px;
             margin-bottom: 20px;
-        }
-
-        .board-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            margin-top: 15px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
-            color: var(--color-bg-dark);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(212, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
-            flex: 1 1 auto;
-            min-width: 150px;
-            text-align: center;
-            text-decoration: none;
-        }
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.4);
-            opacity: 0;
-            border-radius: 50%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(212, 0, 0, 0.6);
-        }
-        .btn:hover::after {
-            animation: pulse 1s ease-out;
-        }
-        @keyframes pulse {
-            0% { transform: scale(0, 0); opacity: 0.5; }
-            100% { transform: scale(20, 20); opacity: 0; }
-        }
-        .btn:disabled {
-            background: #444;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.5;
-        }
-
-        .help-selector {
-            padding: 12px 18px;
-            border: 2px solid var(--color-primary);
-            border-radius: 8px;
-            font-size: 1rem;
-            width: 100%;
-            max-width: 300px;
-            background-color: var(--color-bg-container);
-            color: var(--color-text-light);
-            transition: all 0.3s;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23d40000" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 30px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
         }
 
         .board-container {
@@ -288,6 +217,38 @@
             animation: markAnimation 0.3s forwards;
         }
 
+        .board-card.auto-marked {
+            border-color: var(--color-auto-mark);
+            box-shadow: 0 0 10px var(--color-auto-mark);
+        }
+
+        .board-card.auto-marked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            background-color: var(--color-auto-mark);
+            border-radius: 50%;
+            opacity: 0.7;
+            transform: translate(-50%, -50%) scale(0);
+            animation: markAnimation 0.3s forwards;
+        }
+
+        .board-card-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 50%;
+            font-size: 12px;
+            z-index: 2;
+        }
+
         @keyframes markAnimation {
             100% {
                 transform: translate(-50%, -50%) scale(1);
@@ -309,94 +270,6 @@
         .board-message.show {
             display: block;
             opacity: 1;
-        }
-
-        .drawn-cards-list {
-            margin-top: 40px;
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            width: 100%;
-            max-width: 900px;
-            margin: 40px auto 0;
-            position: relative;
-        }
-
-        .drawn-cards-list h3 {
-            color: var(--color-primary);
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .drawn-cards-list h3 span {
-            color: var(--color-secondary);
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            border: 1px solid rgba(212, 0, 0, 0.5);
-            border-radius: 8px;
-        }
-
-        .cards-grid::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .cards-grid::-webkit-scrollbar-track {
-            background: #2b2b2b;
-            border-radius: 10px;
-        }
-
-        .cards-grid::-webkit-scrollbar-thumb {
-            background: var(--color-primary);
-            border-radius: 10px;
-            border: 2px solid #2b2b2b;
-        }
-
-        .drawn-card-item {
-            background-color: #2b2b2b;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid var(--color-primary);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .drawn-card-item.faltante {
-            background-color: #441111;
-            border-color: #ff0000;
-        }
-        
-        .drawn-card-item.faltante .card-number {
-            color: #ff0000;
-        }
-        
-        .drawn-card-item.faltante .card-name {
-            color: #fff;
-        }
-
-        .drawn-card-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(212, 0, 0, 0.2);
-        }
-
-        .drawn-card-item .card-number {
-            font-weight: bold;
-            color: var(--color-primary);
-            font-size: 1.1rem;
-        }
-
-        .drawn-card-item .card-name {
-            flex-grow: 1;
-            color: var(--color-text-light);
-            font-size: 1rem;
         }
 
         .firebase-status {
@@ -433,7 +306,7 @@
             align-items: center;
             margin-bottom: 15px;
             padding: 10px;
-            background-color: rgba(212, 0, 0, 0.2);
+            background-color: rgba(200, 16, 46, 0.2);
             border-radius: 8px;
         }
         
@@ -456,7 +329,7 @@
         }
         
         .player1-tag {
-            background-color: #006847;
+            background-color: var(--color-player1);
             color: white;
         }
         
@@ -475,6 +348,139 @@
             background-color: #F44336;
         }
 
+        .card-sobrante {
+            background-color: rgba(255, 68, 68, 0.2);
+            border-color: var(--color-sobrante) !important;
+        }
+
+        .countdown-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 5;
+        }
+
+        @keyframes flipIn {
+            0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+        }
+        .flip-animation { animation: flipIn 0.6s ease forwards; }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .celebrate { animation: celebrate 0.5s ease-in-out 3; }
+
+        .game-status {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .current-card {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .current-card img {
+            max-width: 200px;
+            max-height: 250px;
+            border: 3px solid var(--color-primary);
+            border-radius: 10px;
+        }
+
+        .current-card h4 {
+            margin: 10px 0 5px;
+            color: var(--color-primary);
+        }
+
+        .current-card p {
+            margin: 0;
+            font-style: italic;
+            color: #ccc;
+        }
+
+        .winner-announcement {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid gold;
+            z-index: 1000;
+            text-align: center;
+            display: none;
+        }
+
+        .winner-announcement h2 {
+            color: gold;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, var(--color-primary), #e53935);
+            color: var(--color-bg-dark);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(200, 16, 46, 0.4);
+            position: relative;
+            overflow: hidden;
+            flex: 1 1 auto;
+            min-width: 150px;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.4);
+            opacity: 0;
+            border-radius: 50%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(200, 16, 46, 0.6);
+        }
+        .btn:hover::after {
+            animation: pulse 1s ease-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0, 0); opacity: 0.5; }
+            100% { transform: scale(20, 20); opacity: 0; }
+        }
+        .btn:disabled {
+            background: #444;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.5;
+        }
+
         @media (max-width: 768px) {
             .loteria-container {
                 padding: 15px;
@@ -487,19 +493,16 @@
                 flex-direction: column;
                 gap: 20px;
             }
-            .controls-wrapper {
-                gap: 10px;
-            }
-            .board-controls {
-                flex-direction: column;
+            .info-wrapper {
                 gap: 10px;
             }
             .btn {
                 width: 100%;
                 min-width: unset;
             }
-            .cards-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            .current-card img {
+                max-width: 150px;
+                max-height: 200px;
             }
             
             .firebase-status {
@@ -523,7 +526,7 @@
     <div class="spotlight" id="spotlight"></div>
 
     <div class="matrix-overlay" id="matrixOverlay">
-        <h2>Generando mesa...</h2>
+        <h2>Cargando mesa...</h2>
     </div>
 
     <div class="firebase-status status-disconnected" id="firebaseStatus">
@@ -531,37 +534,50 @@
         <span>Desconectado de Firebase</span>
     </div>
 
+    <div class="winner-announcement" id="winnerAnnouncement">
+        <h2 id="winnerText">¡Felicidades! ¡Has ganado! La Primera Ronda 1/2</h2>
+        <button class="btn" id="continueBtn">Continuar la carta llena</button>
+    </div>
+
     <div class="loteria-container">
-        <h1>Lotería Mexicana - Segundo Jugador</h1>
+        <h1>Lotería Mexicana - Jugador 2</h1>
+        
+        <div class="game-status" id="gameStatus">
+            <div>Estado: <span id="statusText">Esperando al cantor...</span></div>
+            <div>Cartas cantadas: <span id="cardsCount">0</span></div>
+        </div>
         
         <div class="player-info">
-            <div class="player1-info">
-                <span class="player-tag player1-tag">Jugador 1</span>
-                <span class="connection-dot dot-disconnected" id="player1Status"></span>
-            </div>
             <div class="player-tag player2-tag">Jugador 2 (Tú)</div>
+            <div class="player1-info">
+                <span class="player-tag player1-tag">Cantor</span>
+                <span class="connection-dot dot-disconnected" id="callerStatus"></span>
+            </div>
         </div>
         
         <div class="main-content">
+            <div class="info-section">
+                <div class="info-wrapper">
+                    <h3>Última carta cantada</h3>
+                    <div class="current-card" id="currentCard">
+                        <p>Esperando primera carta...</p>
+                    </div>
+                    
+                    <div class="board-controls">
+                        <button class="btn" id="requestBoardBtn">Solicitar Mesa</button>
+                        <button class="btn" id="clearBoardBtn">Limpiar Mesa</button>
+                        <a href="cartamesa.html" class="btn" id="callerLink">Abrir como Cantor</a>
+                    </div>
+                    <div class="board-message" id="boardMessage"></div>
+                </div>
+            </div>
+
             <div class="board-section">
                 <div class="board-container">
                     <h3>Tu Mesa de Lotería</h3>
                     <div class="board-grid" id="playerBoard">
+                        <!-- El tablero se generará automáticamente -->
                     </div>
-                    <div class="board-controls">
-                        <select class="help-selector" id="helpSelector">
-                            <option value="con-ayuda">Mesa con ayuda (auto-marcado)</option>
-                            <option value="sin-ayuda" selected>Mesa sin ayuda (marcado manual)</option>
-                        </select>
-                        <button class="btn" id="newBoardBtn">Nueva Mesa</button>
-                        <a href="cartamesa.html" class="btn">Volver al Primer Jugador</a>
-                    </div>
-                    <div class="board-message" id="boardMessage"></div>
-                </div>
-                
-                <div class="drawn-cards-list">
-                    <h3>Cartas Sacadas (<span id="drawnCount">0</span>/54)</h3>
-                    <div class="cards-grid" id="cardsGrid"></div>
                 </div>
             </div>
         </div>
@@ -572,13 +588,11 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     
-    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <!-- Add Firebase products that you want to use -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <script>
-        // Configuración de Firebase
+        // Configuración de Firebase (la misma que en cartamesa.html)
         const firebaseConfig = {
             apiKey: "AIzaSyABJmU-UBjqwQiuzVUhpIdUmYsXcHV0P6s",
             authDomain: "loteriafirebase.firebaseapp.com",
@@ -619,336 +633,607 @@
             { numero: 22, nombre: "La Bota", imagen: "LoteriaEstampas/pagina22_img0.jpeg", descripcion: "Representa el viaje y el camino." },
             { numero: 23, nombre: "La Luna", imagen: "LoteriaEstampas/pagina23_img0.jpeg", descripcion: "Simboliza la intuición y los ciclos." },
             { numero: 24, nombre: "El Cotorro", imagen: "LoteriaEstampas/pagina24_img0.jpeg", descripcion: "Representa la comunicación y la sociabilidad." },
-            { numero: 25, nombre: "El Borracho", imagen: "LoteriaEstampas/pagina25_img0.jpeg", descripcion: "Simboliza los excesos y la diversión." },
-            { numero: 26, nombre: "El Negrito", imagen: "LoteriaEstampas/pagina26_img0.jpeg", descripcion: "Representa la alegría y la festividad." },
+            { numero: 25, nombre: "El Borracho", imagen: "LoteriaEstampas/pagina25_img0.jpeg", descripcion: "Simboliza los excesos y la falta de control." },
+            { numero: 26, nombre: "El Negrito", imagen: "LoteriaEstampas/pagina26_img0.jpeg", descripcion: "Representa la alegría y la música." },
             { numero: 27, nombre: "El Corazón", imagen: "LoteriaEstampas/pagina27_img0.jpeg", descripcion: "Simboliza el amor y los sentimientos." },
             { numero: 28, nombre: "La Sandía", imagen: "LoteriaEstampas/pagina28_img0.jpeg", descripcion: "Representa la abundancia y la frescura." },
-            { numero: 29, nombre: "El Tambor", imagen: "LoteriaEstampas/pagina29_img0.jpeg", descripcion: "Simboliza la celebración y el ritmo." },
+            { numero: 29, nombre: "El Tambor", imagen: "LoteriaEstampas/pagina29_img0.jpeg", descripcion: "Simboliza el ritmo y la celebración." },
             { numero: 30, nombre: "El Camarón", imagen: "LoteriaEstampas/pagina30_img0.jpeg", descripcion: "Representa la adaptabilidad y la perseverancia." },
-            { numero: 31, nombre: "Las Jaras", imagen: "LoteriaEstampas/pagina31_img0.jpeg", descripcion: "Simbolizan la dirección y el propósito." },
+            { numero: 31, nombre: "Las Jaras", imagen: "LoteriaEstampas/pagina31_img0.jpeg", descripcion: "Simboliza la dirección y el propósito." },
             { numero: 32, nombre: "El Músico", imagen: "LoteriaEstampas/pagina32_img0.jpeg", descripcion: "Representa el arte y la expresión." },
             { numero: 33, nombre: "La Araña", imagen: "LoteriaEstampas/pagina33_img0.jpeg", descripcion: "Simboliza la creatividad y la paciencia." },
             { numero: 34, nombre: "El Soldado", imagen: "LoteriaEstampas/pagina34_img0.jpeg", descripcion: "Representa la disciplina y el honor." },
             { numero: 35, nombre: "La Estrella", imagen: "LoteriaEstampas/pagina35_img0.jpeg", descripcion: "Simboliza la guía y la esperanza." },
-            { numero: 36, nombre: "El Cazo", imagen: "LoteriaEstampas/pagina36_img0.jpeg", descripcion: "Representa la cocina y el sustento." },
-            { numero: 37, nombre: "El Mundo", imagen: "LoteriaEstampas/pagina37_img0.jpeg", descripcion: "Simboliza la totalidad y la conexión." },
+            { numero: 36, nombre: "El Cazo", imagen: "LoteriaEstampas/pagina36_img0.jpeg", descripcion: "Representa la utilidad y el trabajo doméstico." },
+            { numero: 37, nombre: "El Mundo", imagen: "LoteriaEstampas/pagina37_img0.jpeg", descripcion: "Simboliza la totalidad y la conexión universal." },
             { numero: 38, nombre: "El Apache", imagen: "LoteriaEstampas/pagina38_img0.jpeg", descripcion: "Representa la fuerza y la resistencia." },
-            { numero: 39, nombre: "El Nopal", imagen: "LoteriaEstampas/pagina39_img0.jpeg", descripcion: "Simboliza la identidad mexicana y la resistencia." },
+            { numero: 39, nombre: "El Nopal", imagen: "LoteriaEstampas/pagina39_img0.jpeg", descripcion: "Simboliza la resiliencia y la identidad mexicana." },
             { numero: 40, nombre: "El Alacrán", imagen: "LoteriaEstampas/pagina40_img0.jpeg", descripcion: "Representa el peligro y la defensa." },
             { numero: 41, nombre: "La Rosa", imagen: "LoteriaEstampas/pagina41_img0.jpeg", descripcion: "Simboliza el amor y la belleza." },
-            { numero: 42, nombre: "La Calavera", imagen: "LoteriaEstampas/pagina42_img0.jpeg", descripcion: "Representa la muerte y el ciclo de la vida." },
-            { numero: 43, nombre: "La Campana", imagen: "LoteriaEstampas/pagina43_img0.jpeg", descripcion: "Simboliza el llamado y la celebración." },
+            { numero: 42, nombre: "La Calavera", imagen: "LoteriaEstampas/pagina42_img0.jpeg", descripcion: "Representa la muerte y el recuerdo de los seres queridos." },
+            { numero: 43, nombre: "La Campana", imagen: "LoteriaEstampas/pagina43_img0.jpeg", descripcion: "Simboliza la alerta y el llamado a la comunidad." },
             { numero: 44, nombre: "El Cantarito", imagen: "LoteriaEstampas/pagina44_img0.jpeg", descripcion: "Representa la tradición y la frescura." },
             { numero: 45, nombre: "El Venado", imagen: "LoteriaEstampas/pagina45_img0.jpeg", descripcion: "Simboliza la agilidad y la conexión con la naturaleza." },
-            { numero: 46, nombre: "El Sol", imagen: "LoteriaEstampas/pagina46_img0.jpeg", descripcion: "Representa la vida y la energía." },
-            { numero: 47, nombre: "La Corona", imagen: "LoteriaEstampas/pagina47_img0.jpeg", descripcion: "Simboliza el poder y la realeza." },
-            { numero: 48, nombre: "La Chalupa", imagen: "LoteriaEstampas/pagina48_img0.jpeg", descripcion: "Representa el transporte y el comercio." },
-            { numero: 49, nombre: "El Pino", imagen: "LoteriaEstampas/pagina49_img0.jpeg", descripcion: "Simboliza la longevidad y la estabilidad." },
+            { numero: 46, nombre: "El Sol", imagen: "LoteriaEstampas/pagina46_img0.jpeg", descripcion: "Representa la vida, la energía y la vitalidad." },
+            { numero: 47, nombre: "La Corona", imagen: "LoteriaEstampas/pagina47_img0.jpeg", descripcion: "Simboliza el poder y la autoridad." },
+            { numero: 48, nombre: "La Chalupa", imagen: "LoteriaEstampas/pagina48_img0.jpeg", descripcion: "Representa el transporte y el viaje por el agua." },
+            { numero: 49, nombre: "El Pino", imagen: "LoteriaEstampas/pagina49_img0.jpeg", descripcion: "Simboliza la fortaleza и la longevidad." },
             { numero: 50, nombre: "El Pescado", imagen: "LoteriaEstampas/pagina50_img0.jpeg", descripcion: "Representa la abundancia y la prosperidad." },
-            { numero: 51, nombre: "La Palma", imagen: "LoteriaEstampas/pagina51_img0.jpeg", descripcion: "Simboliza la victoria y el éxito." },
-            { numero: 52, nombre: "La Maceta", imagen: "LoteriaEstampas/pagina52_img0.jpeg", descripcion: "Representa el crecimiento y la fertilidad." },
-            { numero: 53, nombre: "El Arpa", imagen: "LoteriaEstampas/pagina53_img0.jpeg", descripcion: "Simboliza la música y la armonía celestial." },
+            { numero: 51, nombre: "La Palma", imagen: "LoteriaEstampas/pagina51_img0.jpeg", descripcion: "Simboliza el descanso y la victoria." },
+            { numero: 52, nombre: "La Maceta", imagen: "LoteriaEstampas/pagina52_img0.jpeg", descripcion: "Representa el crecimiento y la naturaleza doméstica." },
+            { numero: 53, nombre: "El Arpa", imagen: "LoteriaEstampas/pagina53_img0.jpeg", descripcion: "Simboliza la música celestial y la armonía." },
             { numero: 54, nombre: "La Rana", imagen: "LoteriaEstampas/pagina54_img0.jpeg", descripcion: "Representa la transformación y la adaptabilidad." }
         ];
 
-        const LoteriaApp = {
-            dom: {
-                confettiCanvas: document.getElementById('confetti-canvas'),
-                matrixOverlay: document.getElementById('matrixOverlay'),
-                cardsGrid: document.getElementById('cardsGrid'),
-                drawnCount: document.getElementById('drawnCount'),
-                spotlight: document.getElementById('spotlight'),
-                playerBoard: document.getElementById('playerBoard'),
-                newBoardBtn: document.getElementById('newBoardBtn'),
-                boardMessage: document.getElementById('boardMessage'),
-                helpSelector: document.getElementById('helpSelector'),
-                firebaseStatus: document.getElementById('firebaseStatus'),
-                player1Status: document.getElementById('player1Status')
-            },
+        // Variables globales
+        let playerBoard = [];
+        let isConnected = false;
+        let callerConnected = false;
+        let drawnCardsCount = 0;
+        let gamePaused = false;
 
-            estado: {
-                mesaJugador: [],
-                cartasSacadas: [],
-                ronda: 1,
-                ayudaActivada: false,
-                gameId: null,
-                playerId: 'player2',
-                player1Connected: false,
-                victoriaAlcanzada: false,
-                victoriaCompleta: false
-            },
+        // Referencias a elementos DOM
+        const playerBoardElement = document.getElementById('playerBoard');
+        const firebaseStatus = document.getElementById('firebaseStatus');
+        const callerStatus = document.getElementById('callerStatus');
+        const statusText = document.getElementById('statusText');
+        const cardsCount = document.getElementById('cardsCount');
+        const currentCardElement = document.getElementById('currentCard');
+        const boardMessage = document.getElementById('boardMessage');
+        const requestBoardBtn = document.getElementById('requestBoardBtn');
+        const clearBoardBtn = document.getElementById('clearBoardBtn');
+        const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+        const winnerText = document.getElementById('winnerText');
+        const continueBtn = document.getElementById('continueBtn');
+        const matrixOverlay = document.getElementById('matrixOverlay');
+        const spotlight = document.getElementById('spotlight');
 
-            inicializar: function() {
-                this.dom.helpSelector.value = 'sin-ayuda';
-                this.estado.ayudaActivada = false;
-                this.generarMesaJugador();
-                this.configurarEventos();
-                this.inicializarEfectos();
-                this.inicializarFirebase();
-            },
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            setupEventListeners();
+            initParticles();
+            initDatabase();
+        });
 
-            inicializarFirebase: function() {
-                // Obtener ID del juego de la URL
-                const urlParams = new URLSearchParams(window.location.search);
-                this.estado.gameId = urlParams.get('gameId');
-                
-                if (!this.estado.gameId) {
-                    // Si no hay ID en la URL, intentar obtenerlo del almacenamiento local
-                    this.estado.gameId = localStorage.getItem('loteriaGameId');
-                    
-                    if (!this.estado.gameId) {
-                        alert('No se ha especificado un ID de juego. Abre este enlace desde el primer jugador.');
-                        return;
-                    }
-                } else {
-                    // Guardar el ID en el almacenamiento local para futuras visitas
-                    localStorage.setItem('loteriaGameId', this.estado.gameId);
-                }
-                
-                // Referencia a la sala de juego en Firebase
-                this.estado.gameRef = database.ref(`games/${this.estado.gameId}`);
-                
-                // Escuchar cambios en la sala
-                this.estado.gameRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        this.manejarDatosRemotos(data);
-                    }
-                    this.actualizarEstadoConexion(true);
-                });
-                
-                // Manejar desconexión
-                this.estado.gameRef.onDisconnect().update({
-                    [`${this.estado.playerId}Connected`]: false,
-                    lastDisconnect: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                // Enviar estado inicial
-                this.enviarEstado();
-            },
+        // Inicializar la aplicación
+        function initApp() {
+            // Mostrar mensaje inicial
+            showBoardMessage("Esperando a que el cantor inicie el juego", "info");
             
-            manejarDatosRemotos: function(data) {
-                // Verificar conexión del jugador 1
-                if (data.player1Connected !== undefined) {
-                    this.estado.player1Connected = data.player1Connected;
-                    this.dom.player1Status.className = data.player1Connected ? 
-                        'connection-dot dot-connected' : 'connection-dot dot-disconnected';
-                }
-                
-                // Sincronizar cartas sacadas
-                if (data.cartasSacadas && JSON.stringify(data.cartasSacadas) !== JSON.stringify(this.estado.cartasSacadas)) {
-                    this.estado.cartasSacadas = data.cartasSacadas;
-                    this.actualizarListaDeCartasSacadas();
-                    
-                    // Si la ayuda está activada, marcar automáticamente las cartas en la mesa
-                    if (this.estado.ayudaActivada) {
-                        this.estado.cartasSacadas.forEach(carta => {
-                            this.verificarMesa(carta.numero);
-                        });
-                    }
-                }
-            },
-            
-            enviarEstado: function() {
-                if (!this.estado.gameRef) return;
-                
-                const updateData = {
-                    player2Mesa: this.estado.mesaJugador,
-                    player2Connected: true,
-                    lastUpdate: firebase.database.ServerValue.TIMESTAMP
-                };
-                
-                this.estado.gameRef.update(updateData);
-            },
-            
-            actualizarEstadoConexion: function(conectado) {
-                if (conectado) {
-                    this.dom.firebaseStatus.className = 'firebase-status status-connected';
-                    this.dom.firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Conectado a Firebase</span>';
-                } else {
-                    this.dom.firebaseStatus.className = 'firebase-status status-disconnected';
-                    this.dom.firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Desconectado de Firebase</span>';
-                }
-            },
+            // Configurar el tablero vacío inicialmente
+            createEmptyBoard();
+        }
 
-            inicializarEfectos: function() {
-                particlesJS('particles-js', {
-                    particles: {
-                        number: { value: 30, density: { enable: true, value_area: 800 } },
-                        color: { value: "#d40000" },
-                        shape: { type: "circle" },
-                        opacity: { value: 0.5, random: true },
-                        size: { value: 3, random: true },
-                        line_linked: { enable: true, distance: 150, color: "#d40000", opacity: 0.4, width: 1 },
-                        move: { enable: true, speed: 2, direction: "none", random: true, straight: false, out_mode: "out" }
+        // Configurar event listeners
+        function setupEventListeners() {
+            requestBoardBtn.addEventListener('click', requestBoard);
+            clearBoardBtn.addEventListener('click', clearBoard);
+            continueBtn.addEventListener('click', hideWinnerAnnouncement);
+
+            // Seguir el movimiento del mouse para el efecto de spotlight
+            document.addEventListener('mousemove', function(e) {
+                const x = e.clientX;
+                const y = e.clientY;
+                spotlight.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(200, 16, 46, 0.2) 0%, transparent 40%)`;
+            });
+        }
+
+        // Inicializar partículas de fondo
+        function initParticles() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 30, density: { enable: true, value_area: 800 } },
+                    color: { value: "#c8102e" },
+                    shape: { type: "circle" },
+                    opacity: { value: 0.5, random: true },
+                    size: { value: 3, random: true },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: "#c8102e",
+                        opacity: 0.4,
+                        width: 1
                     },
-                    interactivity: {
-                        detect_on: "canvas",
-                        events: { onhover: { enable: true, mode: "repulse" }, onclick: { enable: true, mode: "push" }, resize: true }
+                    move: {
+                        enable: true,
+                        speed: 2,
+                        direction: "none",
+                        random: true,
+                        straight: false,
+                        out_mode: "out",
+                        bounce: false
                     }
-                });
-
-                document.addEventListener('mousemove', (e) => {
-                    const x = e.clientX / window.innerWidth;
-                    const y = e.clientY / window.innerHeight;
-                    this.dom.spotlight.style.background = `radial-gradient(circle at ${x * 100}% ${y * 100}%, rgba(212, 0, 0, 0.2) 0%, transparent 40%)`;
-                });
-            },
-
-            generarMesaJugador: function() {
-                this.dom.matrixOverlay.style.opacity = '1';
-                this.dom.matrixOverlay.style.pointerEvents = 'all';
-
-                setTimeout(() => {
-                    this.estado.mesaJugador = [];
-                    this.dom.playerBoard.innerHTML = '';
-
-                    const cartasAleatorias = [...cartasLoteria]
-                        .sort(() => Math.random() - 0.5)
-                        .slice(0, 16);
-
-                    cartasAleatorias.forEach((carta, index) => {
-                        this.estado.mesaJugador.push({
-                            numero: carta.numero,
-                            nombre: carta.nombre,
-                            marcado: false
-                        });
-
-                        const cardElement = document.createElement('div');
-                        cardElement.className = 'board-card';
-                        cardElement.dataset.numero = carta.numero;
-                        cardElement.dataset.nombre = carta.nombre;
-                        cardElement.style.backgroundImage = `url('${carta.imagen}')`;
-                        cardElement.addEventListener('click', () => this.marcarCarta(carta.numero));
-
-                        this.dom.playerBoard.appendChild(cardElement);
-                    });
-
-                    this.dom.matrixOverlay.style.opacity = '0';
-                    this.dom.matrixOverlay.style.pointerEvents = 'none';
-                    
-                    // Enviar estado actualizado a Firebase
-                    this.enviarEstado();
-                }, 1500);
-            },
-
-            marcarCarta: function(numeroCarta) {
-                if (this.estado.ayudaActivada) return;
-
-                const cartaIndex = this.estado.mesaJugador.findIndex(c => c.numero === numeroCarta);
-                if (cartaIndex !== -1) {
-                    this.estado.mesaJugador[cartaIndex].marcado = !this.estado.mesaJugador[cartaIndex].marcado;
-                    
-                    const cardElement = this.dom.playerBoard.querySelector(`[data-numero="${numeroCarta}"]`);
-                    if (this.estado.mesaJugador[cartaIndex].marcado) {
-                        cardElement.classList.add('marked');
-                        this.mostrarMensaje(`¡${this.estado.mesaJugador[cartaIndex].nombre} marcado!`);
-                    } else {
-                        cardElement.classList.remove('marked');
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: { enable: true, mode: "repulse" },
+                        onclick: { enable: true, mode: "push" },
+                        resize: true
                     }
-                    
-                    this.verificarVictoria();
-                }
-            },
+                },
+                retina_detect: true
+            });
+        }
 
-            verificarMesa: function(numeroCarta) {
-                const cartaIndex = this.estado.mesaJugador.findIndex(c => c.numero === numeroCarta);
-                if (cartaIndex !== -1 && !this.estado.mesaJugador[cartaIndex].marcado) {
-                    this.estado.mesaJugador[cartaIndex].marcado = true;
-                    
-                    const cardElement = this.dom.playerBoard.querySelector(`[data-numero="${numeroCarta}"]`);
-                    cardElement.classList.add('marked');
-                    
-                    this.verificarVictoria();
-                }
-            },
-
-            verificarVictoria: function() {
-                const cartasMarcadas = this.estado.mesaJugador.filter(c => c.marcado).length;
+        // Crear un tablero vacío
+        function createEmptyBoard() {
+            playerBoardElement.innerHTML = '';
+            playerBoard = [];
+            
+            for (let i = 0; i < 16; i++) {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'board-card';
+                cardElement.dataset.index = i;
+                cardElement.innerHTML = '<div class="board-card-number">?</div>';
                 
-                if (cartasMarcadas === 16 && !this.estado.victoriaCompleta) {
-                    this.estado.victoriaCompleta = true;
-                    this.mostrarMensaje('¡LOTERÍA COMPLETA! ¡FELICIDADES!', true);
-                    this.lanzarConfetti();
-                } else if (cartasMarcadas >= 4 && !this.estado.victoriaAlcanzada) {
-                    this.estado.victoriaAlcanzada = true;
-                    this.mostrarMensaje('¡Tienes una línea! ¡Sigue así!');
-                }
-            },
-
-            actualizarListaDeCartasSacadas: function() {
-                this.dom.cardsGrid.innerHTML = '';
-                this.dom.drawnCount.textContent = this.estado.cartasSacadas.length;
+                cardElement.addEventListener('click', function() {
+                    // No hacer nada en un tablero vacío
+                    showBoardMessage("Primero solicita una mesa al cantor", "info");
+                });
                 
-                this.estado.cartasSacadas.forEach(carta => {
-                    const cartaInfo = cartasLoteria.find(c => c.numero === carta.numero);
-                    if (!cartaInfo) return;
-                    
-                    const cardItem = document.createElement('div');
-                    cardItem.className = 'drawn-card-item';
-                    
-                    // Verificar si esta carta está en nuestra mesa
-                    const enMesa = this.estado.mesaJugador.some(c => c.numero === carta.numero);
-                    if (enMesa && !this.estado.mesaJugador.find(c => c.numero === carta.numero).marcado) {
-                        cardItem.classList.add('faltante');
-                    }
-                    
-                    cardItem.innerHTML = `
-                        <span class="card-number">${cartaInfo.numero}</span>
-                        <span class="card-name">${cartaInfo.nombre}</span>
-                    `;
-                    
-                    this.dom.cardsGrid.appendChild(cardItem);
-                });
-            },
-
-            mostrarMensaje: function(mensaje, esVictoria = false) {
-                this.dom.boardMessage.textContent = mensaje;
-                this.dom.boardMessage.style.backgroundColor = esVictoria ? '#4CAF50' : 'var(--color-primary)';
-                this.dom.boardMessage.classList.add('show');
-                
-                setTimeout(() => {
-                    this.dom.boardMessage.classList.remove('show');
-                }, esVictoria ? 5000 : 3000);
-            },
-
-            lanzarConfetti: function() {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#d40000', '#ffeb3b', '#4caf50', '#2196f3']
-                });
-            },
-
-            configurarEventos: function() {
-                this.dom.newBoardBtn.addEventListener('click', () => {
-                    this.estado.victoriaAlcanzada = false;
-                    this.estado.victoriaCompleta = false;
-                    this.generarMesaJugador();
-                });
-
-                this.dom.helpSelector.addEventListener('change', (e) => {
-                    this.estado.ayudaActivada = e.target.value === 'con-ayuda';
-                    
-                    if (this.estado.ayudaActivada) {
-                        this.mostrarMensaje('Ayuda activada: las cartas se marcarán automáticamente');
-                        
-                        // Marcar automáticamente las cartas ya sacadas
-                        this.estado.cartasSacadas.forEach(carta => {
-                            this.verificarMesa(carta.numero);
-                        });
-                    } else {
-                        this.mostrarMensaje('Ayuda desactivada: marca las cartas manualmente');
-                    }
+                playerBoardElement.appendChild(cardElement);
+                playerBoard.push({
+                    elemento: cardElement,
+                    carta: null,
+                    marcado: false
                 });
             }
-        };
+        }
 
-        // Iniciar la aplicación cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', () => {
-            LoteriaApp.inicializar();
-        });
+        // Solicitar una mesa al cantor
+        function requestBoard() {
+            showBoardMessage("Solicitando mesa al cantor...", "info");
+            
+            // Enviar solicitud a Firebase
+            database.ref('game/boardRequest').set({
+                player: "Jugador 2",
+                timestamp: Date.now()
+            });
+        }
+
+        // Limpiar el tablero
+        function clearBoard() {
+            for (let i = 0; i < playerBoard.length; i++) {
+                playerBoard[i].marcado = false;
+                playerBoard[i].elemento.classList.remove('marked', 'auto-marked');
+            }
+            
+            showBoardMessage("Mesa limpiada", "success");
+            
+            // Guardar el estado del tablero en Firebase
+            saveBoardState();
+        }
+
+        // Ocultar el anuncio de ganador
+        function hideWinnerAnnouncement() {
+            winnerAnnouncement.style.display = 'none';
+        }
+
+        // Inicializar la base de datos de Firebase
+        function initDatabase() {
+            // Referencia a la conexión
+            const connectedRef = database.ref(".info/connected");
+            
+            connectedRef.on("value", function(snap) {
+                if (snap.val() === true) {
+                    isConnected = true;
+                    firebaseStatus.className = 'firebase-status status-connected';
+                    firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Conectado a Firebase</span>';
+                    statusText.textContent = 'Conectado';
+                    
+                    // Registrar este jugador
+                    registerPlayer();
+                    
+                    // Cargar el estado del juego si existe
+                    loadGameState();
+                } else {
+                    isConnected = false;
+                    firebaseStatus.className = 'firebase-status status-disconnected';
+                    firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Desconectado de Firebase</span>';
+                    statusText.textContent = 'Desconectado';
+                }
+            });
+            
+            // Escuchar cambios en el estado del juego
+            database.ref('game').on('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    const gameData = snapshot.val();
+
+                    if (gameData.paused) {
+                    gamePaused = gameData.paused;
+                    if (gamePaused) {
+                    statusText.textContent = 'Juego pausado - Esperando reinicio';
+                    }
+                    }
+                    
+                    // Verificar si el cantor está conectado
+                    if (gameData.players && gameData.players.cantor) {
+                        callerConnected = true;
+                        callerStatus.className = 'connection-dot dot-connected';
+                        statusText.textContent = 'Juego en curso';
+                    } else {
+                        callerConnected = false;
+                        callerStatus.className = 'connection-dot dot-disconnected';
+                        statusText.textContent = 'Esperando al cantor';
+                    }
+                    
+                    // Actualizar contador de cartas
+                    if (gameData.drawnCards) {
+                        drawnCardsCount = gameData.drawnCards.length;
+                        cardsCount.textContent = drawnCardsCount;
+                    }
+                    
+                    // Cargar la última carta cantada
+                    if (gameData.lastCard) {
+                        updateCurrentCard(gameData.lastCard);
+                    }
+                    
+                    // Cargar el tablero distribuido
+                    if (gameData.distributedBoard) {
+                        loadBoardFromFirebase(gameData.distributedBoard.board);
+                    }
+                    
+                    // Cargar estado del tablero
+                    if (gameData.players && gameData.players.player2) {
+                        loadBoardState(gameData.players.player2.board);
+                    }
+                    
+                    // Verificar si hay un ganador
+                    if (gameData.winner) {
+                        if (gameData.winner.player === "player2") {
+                            winnerText.textContent = "¡Felicidades! ¡Has ganado!";
+                        } else {
+                            winnerText.textContent = `¡${gameData.winner.player} ha ganado!`;
+                        }
+                        winnerAnnouncement.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Registrar este jugador en Firebase
+        function registerPlayer() {
+            const playerRef = database.ref('game/players/player2');
+            playerRef.set({
+                name: 'Jugador 2',
+                connected: true,
+                timestamp: Date.now(),
+                board: playerBoard.map(card => ({
+                    numero: card.carta ? card.carta.numero : null,
+                    marcado: card.marcado
+                }))
+            });
+            
+            playerRef.onDisconnect().update({
+                connected: false
+            });
+        }
+
+        // Cargar el estado del juego desde Firebase
+        function loadGameState() {
+            database.ref('game').once('value').then(function(snapshot) {
+                if (snapshot.exists()) {
+                    const gameData = snapshot.val();
+                    
+                    // Cargar estado del tablero
+                    if (gameData.players && gameData.players.player2 && gameData.players.player2.board) {
+                        loadBoardState(gameData.players.player2.board);
+                    }
+                    
+                    // Cargar el tablero distribuido
+                    if (gameData.distributedBoard) {
+                        loadBoardFromFirebase(gameData.distributedBoard.board);
+                    }
+                }
+            });
+        }
+
+        // Cargar el tablero desde Firebase
+        function loadBoardFromFirebase(boardData) {
+            // Mostrar animación de carga
+            matrixOverlay.style.opacity = '1';
+            matrixOverlay.style.pointerEvents = 'all';
+            
+            setTimeout(() => {
+                playerBoardElement.innerHTML = '';
+                playerBoard = [];
+                
+                // Crear el tablero con las cartas distribuidas
+                for (let i = 0; i < boardData.length; i++) {
+                    const cardData = boardData[i];
+                    const carta = cartasLoteria.find(c => c.numero === cardData.numero);
+                    
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'board-card';
+                    cardElement.dataset.index = i;
+                    
+                    if (carta) {
+                        cardElement.style.backgroundImage = `url('${carta.imagen}')`;
+                        
+                        const numberElement = document.createElement('div');
+                        numberElement.className = 'board-card-number';
+                        numberElement.textContent = carta.numero;
+                        
+                        cardElement.appendChild(numberElement);
+                        
+                        // Agregar evento de clic para marcar/desmarcar
+                        cardElement.addEventListener('click', function() {
+                            toggleMarkCard(i);
+                        });
+                        
+                        playerBoard.push({
+                            elemento: cardElement,
+                            carta: carta,
+                            marcado: cardData.marcado || false
+                        });
+                    } else {
+                        cardElement.innerHTML = '<div class="board-card-number">?</div>';
+                        playerBoard.push({
+                            elemento: cardElement,
+                            carta: null,
+                            marcado: false
+                        });
+                    }
+                    
+                    playerBoardElement.appendChild(cardElement);
+                }
+                
+                // Aplicar marcas existentes
+                for (let i = 0; i < playerBoard.length; i++) {
+                    if (playerBoard[i].marcado) {
+                        playerBoard[i].elemento.classList.add('marked');
+                    }
+                }
+                
+                // Ocultar animación
+                setTimeout(() => {
+                    matrixOverlay.style.opacity = '0';
+                    matrixOverlay.style.pointerEvents = 'none';
+                }, 1000);
+                
+                showBoardMessage("Mesa recibida del cantor", "success");
+            }, 1000);
+        }
+
+        // Cargar el estado del tablero desde Firebase
+        function loadBoardState(boardData) {
+            for (let i = 0; i < playerBoard.length; i++) {
+                if (boardData[i] && playerBoard[i].carta && boardData[i].numero === playerBoard[i].carta.numero) {
+                    playerBoard[i].marcado = boardData[i].marcado;
+                    
+                    if (boardData[i].marcado) {
+                        playerBoard[i].elemento.classList.add('marked');
+                    } else {
+                        playerBoard[i].elemento.classList.remove('marked');
+                    }
+                }
+            }
+        }
+
+        // Marcar/desmarcar una carta en el tablero
+        function toggleMarkCard(index) {
+            if (gamePaused) {
+            showBoardMessage("El juego está pausado. Espera a que se reinicie.", "info");
+            return;
+            }
+            if (!playerBoard[index].carta) {
+                showBoardMessage("Esta posición no tiene una carta válida", "error");
+                return;
+            }
+            
+            playerBoard[index].marcado = !playerBoard[index].marcado;
+            
+            if (playerBoard[index].marcado) {
+                playerBoard[index].elemento.classList.add('marked');
+                
+                // Animar la carta marcada
+                playerBoard[index].elemento.classList.add('celebrate');
+                setTimeout(() => {
+                    playerBoard[index].elemento.classList.remove('celebrate');
+                }, 1500);
+                
+                // Verificar si hay un ganador
+                checkForWinner();
+            } else {
+                playerBoard[index].elemento.classList.remove('marked');
+            }
+            
+            // Guardar el estado del tablero en Firebase
+            saveBoardState();
+        }
+
+        function pauseGame() {
+    gamePaused = true;
+    statusText.textContent = 'Juego pausado - Esperando reinicio';
+    
+    // Guardar estado de pausa en Firebase
+    if (isConnected) {
+        database.ref('game/paused').set(true);
+                }
+            }
+
+        // Verificar si hay un ganador
+function checkForWinner() {
+    if (gamePaused) return; // No verificar si el juego está pausado
+    
+    // Verificar líneas horizontales
+    for (let i = 0; i < 4; i++) {
+        if (playerBoard[i*4].marcado && playerBoard[i*4+1].marcado && 
+            playerBoard[i*4+2].marcado && playerBoard[i*4+3].marcado) {
+            showWinner("¡Línea horizontal completa!");
+            pauseGame();
+            return;
+        }
+    }
+    
+    // Verificar líneas verticales
+    for (let i = 0; i < 4; i++) {
+        if (playerBoard[i].marcado && playerBoard[i+4].marcado && 
+            playerBoard[i+8].marcado && playerBoard[i+12].marcado) {
+            showWinner("¡Línea vertical completa!");
+            pauseGame();
+            return;
+        }
+    }
+    
+    // Verificar diagonal principal
+    if (playerBoard[0].marcado && playerBoard[5].marcado && 
+        playerBoard[10].marcado && playerBoard[15].marcado) {
+        showWinner("¡Diagonal completa!");
+        pauseGame();
+        return;
+    }
+    
+    // Verificar diagonal secundaria
+    if (playerBoard[3].marcado && playerBoard[6].marcado && 
+        playerBoard[9].marcado && playerBoard[12].marcado) {
+        showWinner("¡Diagonal completa!");
+        pauseGame();
+        return;
+    }
+    
+    // Verificar cuatro esquinas
+    if (playerBoard[0].marcado && playerBoard[3].marcado && 
+        playerBoard[12].marcado && playerBoard[15].marcado) {
+        showWinner("¡Cuatro esquinas completas!");
+        pauseGame();
+        return;
+    }
+    
+    // Verificar cuadrados (2x2)
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            const index = row * 4 + col;
+            if (playerBoard[index].marcado && playerBoard[index+1].marcado && 
+                playerBoard[index+4].marcado && playerBoard[index+5].marcado) {
+                showWinner("¡Cuadrado completo!");
+                pauseGame();
+                return;
+            }
+        }
+    }
+    
+    // Verificar cartón lleno (esto sería la lotería completa)
+    let todasMarcadas = true;
+    for (let i = 0; i < playerBoard.length; i++) {
+        if (!playerBoard[i].marcado) {
+            todasMarcadas = false;
+            break;
+        }
+    }
+    
+    if (todasMarcadas) {
+        showWinner("¡Cartón lleno! ¡Lotería!");
+        pauseGame();
+    }
+
+    // Dentro de la lógica que se ejecuta al detectar que alguien ganó la ronda:
+if (rondaActual === 'chica') {
+  continueBtn.textContent = 'Continuar a la última ronda';
+} else if (rondaActual === 'cartaLlena') {
+  continueBtn.textContent = 'Continuar la carta llena';
+} else {
+  continueBtn.textContent = 'Continuar';
+}
+
+winnerAnnouncement.style.display = 'block';
+    
+}
+
+        // Anunciar ganador
+        function announceWinner(message) {
+            winnerText.textContent = message;
+            winnerAnnouncement.style.display = 'block';
+            
+            // Disparar confeti
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+            });
+            
+            // Guardar en Firebase que hay un ganador
+            database.ref('game/winner').set({
+                player: "player2",
+                message: message,
+                timestamp: Date.now()
+            });
+        }
+
+        // Actualizar la carta actual mostrada
+        function updateCurrentCard(cardData) {
+            const carta = cartasLoteria.find(c => c.numero === cardData.numero);
+            if (!carta) return;
+            
+            currentCardElement.innerHTML = `
+                <img src="${carta.imagen}" alt="${carta.nombre}">
+                <h4>${carta.numero}. ${carta.nombre}</h4>
+                <p>${carta.descripcion}</p>
+            `;
+            
+            // Marcar automáticamente en el tablero si existe
+            markCardOnBoard(carta.numero);
+        }
+
+        // Marcar una carta en el tablero
+        function markCardOnBoard(cardNumber) {
+            for (let i = 0; i < playerBoard.length; i++) {
+                if (playerBoard[i].carta && playerBoard[i].carta.numero === cardNumber) {
+                    if (!playerBoard[i].marcado) {
+                        playerBoard[i].marcado = true;
+                        playerBoard[i].elemento.classList.add('auto-marked');
+                        
+                        // Animar la carta marcada
+                        playerBoard[i].elemento.classList.add('celebrate');
+                        setTimeout(() => {
+                            playerBoard[i].elemento.classList.remove('celebrate');
+                        }, 1500);
+                        
+                        // Verificar si hay un ganador
+                        checkForWinner();
+                        
+                        // Guardar el estado del tablero en Firebase
+                        saveBoardState();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Guardar el estado del tablero en Firebase
+        function saveBoardState() {
+            if (!isConnected) return;
+            
+            const boardData = playerBoard.map(card => ({
+                numero: card.carta ? card.carta.numero : null,
+                marcado: card.marcado
+            }));
+            
+            database.ref('game/players/player2/board').set(boardData);
+        }
+
+        // Mostrar un mensaje en el tablero
+        function showBoardMessage(message, type) {
+            boardMessage.textContent = message;
+            boardMessage.className = 'board-message show';
+            
+            // Añadir clase según el tipo
+            if (type === 'error') {
+                boardMessage.style.backgroundColor = '#d32f2f';
+            } else if (type === 'success') {
+                boardMessage.style.backgroundColor = '#388e3c';
+            } else {
+                boardMessage.style.backgroundColor = '#1976d2';
+            }
+            
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                boardMessage.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
