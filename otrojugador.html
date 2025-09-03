@@ -961,6 +961,13 @@ function initDatabase() {
         if (snapshot.exists()) {
             const gameData = snapshot.val();
 
+             // Verificar si el juego ya no está pausado
+        if (gameData.paused === false && gamePaused) {
+            gamePaused = false;
+            statusText.textContent = callerConnected ? 'Juego en curso' : 'Esperando al cantor';
+            winnerAnnouncement.style.display = 'none';
+        }
+
             // Actualizar estado de la ronda
             if (gameData.ronda) {
                 rondaActual = gameData.ronda;

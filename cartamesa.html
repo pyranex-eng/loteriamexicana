@@ -1018,7 +1018,7 @@
         // Función para limpiar todas las marcas del tablero
     function limpiarFichas() {
     // Mostrar confirmación para evitar limpiezas accidentales
-    if (!confirm("¿Estás seguro de que quieres limpiar todas las fichas del tablero? Esto reiniciará el juego.")) {
+    if (!confirm("¿Estás seguro de que quieres limpiar todas las fichas del tablero?")) {
         return;
     }
     
@@ -1041,26 +1041,6 @@
         saveBoardToFirebase();
         
         showBoardMessage("✓ Todas las fichas han sido limpiadas", "success");
-        
-        // Reactivar el juego si estaba pausado
-        if (gamePaused) {
-            gamePaused = false;
-            statusText.textContent = 'Juego en curso';
-            
-            // Habilitar controles
-            slideBtn.disabled = false;
-            randomBtn.disabled = false;
-            cartaSelector.disabled = false;
-            
-            // Ocultar anuncio de ganador
-            winnerAnnouncement.style.display = 'none';
-            
-            // Limpiar el estado de ganador y pausa en Firebase
-            if (isConnected) {
-                database.ref('game/winner').remove();
-                database.ref('game/paused').set(false);
-            }
-        }
     }, 300);
 }
 
@@ -1086,7 +1066,6 @@
         if (confirm("¿Estás seguro de que quieres iniciar un nuevo juego? Esto reiniciará las cartas y limpiará los tableros.")) {
             // Reinicio completo: barajear cartas y limpiar fichas
             barajearCartas(); // Esto reinicia las cartas disponibles y sacadas
-            limpiarFichas(); // Esto limpia las marcas del tablero del cantor y lo guarda en Firebase
             rondaActual = 'primera'; // Resetear la ronda
             database.ref('game/ronda').set('primera'); // Resetear la ronda en Firebase
             database.ref('game/winner').remove(); // Limpiar el ganador en Firebase
@@ -1438,6 +1417,21 @@ function verificarCartonLleno() {
 
         // Sacar una carta aleatoria
         function sacarCartaAleatoria() {
+            // Añadir esta verificación al inicio de la función
+    if (gamePaused && !confirm("El juego está pausado. ¿Deseas reanudarlo sacando una carta?")) {
+        return;
+    }
+    
+    // Si estaba pausado, reanudar el juego
+    if (gamePaused) {
+        reanudarJuego();
+    }
+    
+    // Resto del código original...
+    if (cartasDisponibles.length === 0) {
+        showBoardMessage("No hay más cartas disponibles", "error");
+        return;
+    }
 
             if (gamePaused) {
             showBoardMessage("El juego está pausado. Reinicia para continuar.", "error");
@@ -1482,14 +1476,30 @@ function verificarCartonLleno() {
         setTimeout(() => {
             matrixOverlay.style.opacity = '0';
             matrixOverlay.style.pointerEvents = 'none';
-        }, 1000);
+        }, 400);
         
         showBoardMessage("Cartas barajeadas correctamente", "success");
-    }, 1500);
+    }, 700);
 }
 
         // Iniciar el desfile de cartas
         function iniciarDesfileCartas() {
+            // Añadir esta verificación al inicio
+    if (gamePaused && !confirm("El juego está pausado. ¿Deseas reanudarlo iniciando el desfile de cartas?")) {
+        return;
+    }
+    
+    // Si estaba pausado, reanudar el juego
+    if (gamePaused) {
+        reanudarJuego();
+    }
+    
+    // Resto del código original...
+    if (cartasDisponibles.length === 0) {
+        showBoardMessage("No hay más cartas disponibles", "error");
+        return;
+    }
+
             if (cartasDisponibles.length === 0) {
                 showBoardMessage("No hay más cartas disponibles", "error");
                 return;
@@ -1509,6 +1519,22 @@ function verificarCartonLleno() {
                 sacarCartaAleatoria();
             }, velocidad);
         }
+
+        function reanudarJuego() {
+    gamePaused = false;
+    statusText.textContent = 'Juego en curso';
+    
+    // Habilitar controles
+    slideBtn.disabled = false;
+    randomBtn.disabled = false;
+    cartaSelector.disabled = false;
+    
+    // Quitar el estado de pausa en Firebase
+    database.ref('game/paused').set(false);
+    database.ref('game/winner').remove(); // Eliminar el ganador anterior
+    
+    showBoardMessage("Juego reanudado", "success");
+}
 
         // Detener el desfile de cartas
         function detenerDesfileCartas() {
@@ -1545,7 +1571,7 @@ function verificarCartonLleno() {
                         markCardOnBoard(ultimaCarta.numero);
                     }
                 }
-            }, 1000);
+            }, 0);
         }
 
         // Marcar una carta en el tablero
@@ -1629,7 +1655,7 @@ function verificarCartonLleno() {
             // Ocultar después de 3 segundos
             setTimeout(() => {
                 boardMessage.classList.remove('show');
-            }, 3000);
+            }, 5000);
         }
 
         // Inicializar la base de datos de Firebase
@@ -1677,11 +1703,6 @@ function initDatabase() {
                 }
             }
             
-            // Verificar si hay un ganador (este listener se reemplaza abajo)
-            // if (gameData.winner) {
-            //     winnerText.textContent = gameData.winner.message;
-            //     winnerAnnouncement.style.display = 'block';
-            // }
         }
     });
 
@@ -1945,31 +1966,45 @@ function distribuirMesas() {
     showBoardMessage("Nueva mesa generada", "success");
 }
 
-                function reiniciarJuego() {
-            if (rondaActual === 'primera') {
-                // Lógica para continuar a la segunda ronda
-                rondaActual = 'segunda';
-                winnerAnnouncement.style.display = 'none';
-                gamePaused = false;
-                statusText.textContent = 'Segunda ronda: Carta llena';
+function reiniciarJuego() {
+    if (rondaActual === 'primera') {
+        // Lógica para continuar a la segunda ronda
+        rondaActual = 'segunda';
+        winnerAnnouncement.style.display = 'none';
+        gamePaused = true;
+        statusText.textContent = 'Segunda ronda: Carta llena';
 
-                // Habilitar controles
-                slideBtn.disabled = false;
-                randomBtn.disabled = false;
-                cartaSelector.disabled = false;
+        // Habilitar controles
+        slideBtn.disabled = false;
+        randomBtn.disabled = false;
+        cartaSelector.disabled = false;
 
-                // No reiniciar las cartas, mantener el estado actual
-                database.ref('game/winner').remove(); // Limpiar el ganador
-                database.ref('game/paused').set(false); // Despausar el juego
-                database.ref('game/ronda').set('segunda');
+        // No reiniciar las cartas, mantener el estado actual
+        database.ref('game/winner').remove(); // Limpiar el ganador
+        database.ref('game/paused').set(false); // Despausar el juego
+        database.ref('game/ronda').set('segunda');
 
-                showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
-                newGameBtn.textContent = 'Nuevo Juego'; // Cambiar el texto del botón para la siguiente fase
-            } else {
-                // Lógica para reiniciar el juego completamente después de la segunda ronda
-                finalizarJuego(); // Llamar a la nueva función para finalizar el juego
-            }
-        }
+        showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
+        newGameBtn.textContent = 'Nuevo Juego'; // Cambiar el texto del botón para la siguiente fase
+    } else {
+        // Lógica para reiniciar el juego completamente después de la segunda ronda
+        // NO mostrar confirmación y NO limpiar las fichas
+        barajearCartas(); // Esto reinicia las cartas disponibles y sacadas
+        rondaActual = 'primera'; // Resetear la ronda
+        database.ref('game/ronda').set('primera'); // Resetear la ronda en Firebase
+        database.ref('game/winner').remove(); // Limpiar el ganador en Firebase
+        database.ref('game/paused').set(false); // Despausar el juego en Firebase
+        statusText.textContent = 'Juego reiniciado';
+        newGameBtn.textContent = 'Continuar la carta llena'; // Restaurar texto inicial del botón
+        gamePaused = true; // Despausar el juego localmente
+        slideBtn.disabled = false; // Habilitar controles
+        randomBtn.disabled = false;
+        cartaSelector.disabled = false;
+        
+        // NO limpiar las fichas del tablero - mantenerlas como están
+        showBoardMessage("Juego reiniciado - Cartas barajeadas", "success");
+    }
+}
     </script>
 </body>
 </html>
