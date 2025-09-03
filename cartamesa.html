@@ -15,7 +15,7 @@
             --color-bg-dark: #121212;
             --color-bg-container: #1e1e1e;
             --color-marcado: #c8102e; /* Rojo bandera para las marcas */
-            --color-player2: #d40000; /* Color para el segundo jugador */
+            --color-otrojugador: #d40000; /* Color para el otro jugador */
             --color-sobrante: #ff4444; /* Color para cartas sobrantes */
             --color-auto-mark: #ff9800; /* Color para marcado automático */
         }
@@ -587,14 +587,14 @@
             color: white;
         }
         
-        .player2-info {
+        .otrojugador-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
-        .player2-tag {
-            background-color: var(--color-player2);
+        .otrojugador-tag {
+            background-color: var(--color-otrojugador);
             color: white;
         }
         
@@ -773,8 +773,8 @@
         
         <div class="player-info">
             <div class="player-tag player1-tag">Cantor (Tú)</div>
-            <div class="player2-info">
-                <span class="player-tag player2-tag">Jugadores</span>
+            <div class="otrojugador-info">
+                <span class="player-tag otrojugador-tag">Jugadores</span>
                 <span class="connection-dot dot-disconnected" id="playersStatus"></span>
             </div>
         </div>
@@ -831,10 +831,10 @@
                     <div class="board-grid" id="playerBoard">
                     </div>
                     <div class="board-controls">
-                    <button class="btn" id="distributeBtn">Distribuir Mesas</button>
-                    <button class="btn" id="clearMarksBtn">Limpiar Fichas</button>
+                    <button class="btn" id="distributeBtn">Generar Mi Mesa</button>
+                    <button class="btn" id="clearMarksBtn">Limpiar Mesa</button>
                     <button class="btn" id="resetGameBtn">Reiniciar Juego</button>
-                    <a href="otrojugador.html" class="btn" id="secondPlayerLink">Abrir Segundo Jugador</a>
+                    <a href="otrojugador.html" class="btn" id="secondPlayerLink">Abrir Otro Jugador</a> <!-- Aqui es para que otro jugador pueden haber muchos jugadores en la partida -->
                 </div>
                     <div class="board-message" id="boardMessage"></div>
                 </div>
@@ -893,7 +893,7 @@
             { numero: 23, nombre: "La Luna", imagen: "LoteriaEstampas/pagina23_img0.jpeg", descripcion: "Simboliza la intuición y los ciclos." },
             { numero: 24, nombre: "El Cotorro", imagen: "LoteriaEstampas/pagina24_img0.jpeg", descripcion: "Representa la comunicación y la sociabilidad." },
             { numero: 25, nombre: "El Borracho", imagen: "LoteriaEstampas/pagina25_img0.jpeg", descripcion: "Simboliza los excesos y la falta de control." },
-            { numero: 26, nome: "El Negrito", imagen: "LoteriaEstampas/pagina26_img0.jpeg", descripcion: "Representa la alegría y la música." },
+            { numero: 26, nombre: "El Negrito", imagen: "LoteriaEstampas/pagina26_img0.jpeg", descripcion: "Representa la alegría y la música." },
             { numero: 27, nombre: "El Corazón", imagen: "LoteriaEstampas/pagina27_img0.jpeg", descripcion: "Simboliza el amor y los sentimientos." },
             { numero: 28, nombre: "La Sandía", imagen: "LoteriaEstampas/pagina28_img0.jpeg", descripcion: "Representa la abundancia y la frescura." },
             { numero: 29, nombre: "El Tambor", imagen: "LoteriaEstampas/pagina29_img0.jpeg", descripcion: "Simboliza el ritmo y la celebración." },
@@ -936,6 +936,8 @@
         let playerBoard = [];
         let gameActive = false;
         let gamePaused = false;
+        let rondaActual = 'primera';
+        let patronGanador = null; // Para almacenar el patrón ganador de la primera ronda
 
         // Referencias a elementos DOM
         const cartaSelector = document.getElementById('cartaSelector');
@@ -1223,110 +1225,154 @@ function initBoard() {
         }
 
         // Verificar si hay un ganador
+// Verificar si hay un ganador
 function checkForWinner() {
     if (gamePaused) return;
-    // Verificar líneas horizontales
+    
+    // Verificar según la ronda actual
+    if (rondaActual === 'primera') {
+        // Verificar patrones de primera ronda (líneas, esquinas, etc.)
+        if (verificarPatronesPrimeraRonda()) {
+            // Guardar el patrón ganador y pausar el juego
+            pauseGame();
+            return;
+        }
+    } else if (rondaActual === 'segunda') {
+        // Verificar cartón lleno para la segunda ronda
+        if (verificarCartonLleno()) {
+            showWinner("¡Cartón lleno! ¡Lotería!", 'segunda');
+            pauseGame();
+            return;
+        }
+    }
+}
+
+   // Modificar las llamadas a showWinner en verificarPatronesPrimeraRonda
+function verificarPatronesPrimeraRonda() {
+    // Lógica para verificar líneas horizontales
     for (let i = 0; i < 4; i++) {
         if (playerBoard[i*4].marcado && playerBoard[i*4+1].marcado && 
             playerBoard[i*4+2].marcado && playerBoard[i*4+3].marcado) {
-            showWinner("¡Línea horizontal completa!");
-            pauseGame();
-            return;
+            patronGanador = `horizontal-${i}`;
+            showWinner("¡Lotería!", 'primera', patronGanador);
+            return true;
         }
     }
     
-    // Verificar líneas verticales
+    // Lógica para verificar líneas verticales
     for (let i = 0; i < 4; i++) {
         if (playerBoard[i].marcado && playerBoard[i+4].marcado && 
             playerBoard[i+8].marcado && playerBoard[i+12].marcado) {
-            showWinner("¡Línea vertical completa!");
-            pauseGame();
-            return;
+            patronGanador = `vertical-${i}`;
+            showWinner("¡Lotería!", 'primera', patronGanador);
+            return true;
         }
     }
     
-    // Verificar diagonal principal
+    // Lógica para verificar diagonal principal
     if (playerBoard[0].marcado && playerBoard[5].marcado && 
         playerBoard[10].marcado && playerBoard[15].marcado) {
-        showWinner("¡Diagonal completa!");
-        pauseGame();
-        return;
+        patronGanador = 'diagonal-principal';
+        showWinner("¡Lotería!", 'primera', patronGanador);
+        return true;
     }
     
-    // Verificar diagonal secundaria
+    // Lógica para verificar diagonal secundaria
     if (playerBoard[3].marcado && playerBoard[6].marcado && 
         playerBoard[9].marcado && playerBoard[12].marcado) {
-        showWinner("¡Diagonal completa!");
-        pauseGame();
-        return;
+        patronGanador = 'diagonal-secundaria';
+        showWinner("¡Lotería!", 'primera', patronGanador);
+        return true;
     }
 
-    // Verificar cuatro esquinas
+    // Lógica para verificar cuatro esquinas
     if (playerBoard[0].marcado && playerBoard[3].marcado && 
-    playerBoard[12].marcado && playerBoard[15].marcado) {
-    showWinner("¡Cuatro esquinas completas!");
-    pauseGame();
-    return;
+        playerBoard[12].marcado && playerBoard[15].marcado) {
+        patronGanador = 'cuatro-esquinas';
+        showWinner("¡Lotería!", 'primera', patronGanador);
+        return true;
     }
     
-    // Verificar cuadrados (2x2)
+    // Lógica para verificar cuadrados (2x2)
     for (let row = 0; row < 3; row++) {
         for (let col = 0; col < 3; col++) {
             const index = row * 4 + col;
             if (playerBoard[index].marcado && playerBoard[index+1].marcado && 
                 playerBoard[index+4].marcado && playerBoard[index+5].marcado) {
-                showWinner("¡Cuadrado completo!");
-                pauseGame();
-                return;
+                patronGanador = `cuadrado-${row}-${col}`;
+                showWinner("¡Lotería!", 'primera', patronGanador);
+                return true;
             }
         }
     }
     
-    // Verificar cartón lleno
-    let todasMarcadas = true;
+    return false;
+}
+
+// Modificar también para la segunda ronda (cartón lleno)
+function verificarCartonLleno() {
+    // Verificar si todas las cartas están marcadas
     for (let i = 0; i < playerBoard.length; i++) {
         if (!playerBoard[i].marcado) {
-            todasMarcadas = false;
-            break;
+            return false;
         }
     }
+    showWinner("¡Cartón lleno! ¡Lotería!", 'segunda', 'carton-lleno');
+    return true;
+}
+
+function showWinner(message, tipoRonda, patron) {
+    let mensajeDetallado = message;
     
-    if (todasMarcadas) {
-        showWinner("¡Cartón lleno! ¡Lotería!");
-        pauseGame();
+    // Añadir detalles del patrón si está disponible
+    if (patron) {
+        if (patron.includes('horizontal')) {
+            const fila = parseInt(patron.split('-')[1]) + 1;
+            mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
+        } else if (patron.includes('vertical')) {
+            const columna = parseInt(patron.split('-')[1]) + 1;
+            mensajeDetallado = `¡Línea vertical ${columna} completa!`;
+        } else if (patron.includes('diagonal-principal')) {
+            mensajeDetallado = "¡Diagonal principal completa!";
+        } else if (patron.includes('diagonal-secundaria')) {
+            mensajeDetallado = "¡Diagonal secundaria completa!";
+        } else if (patron.includes('cuatro-esquinas')) {
+            mensajeDetallado = "¡Cuatro esquinas completas!";
+        } else if (patron.includes('cuadrado')) {
+            const partes = patron.split('-');
+            const fila = parseInt(partes[1]) + 1;
+            const columna = parseInt(partes[2]) + 1;
+            mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+        }
     }
 
-    // Dentro de la lógica que se ejecuta al detectar un ganador:
-if (rondaActual === 'chica') {
-  newGameBtn.textContent = 'Continuar a la última ronda';
-} else if (rondaActual === 'cartaLlena') {
-  newGameBtn.textContent = 'Continuar la carta llena';
-} else {
-  newGameBtn.textContent = 'Nuevo Juego';
-}
-
-winnerAnnouncement.style.display = 'block';
+        winnerText.textContent = mensajeDetallado;
     
-}
+    // Configurar el texto del botón según la ronda
+    if (tipoRonda === 'primera') {
+        newGameBtn.textContent = 'Continuar a la carta llena';
+    } else {
+        newGameBtn.textContent = 'Nuevo Juego';
+    }
+    
+    winnerAnnouncement.style.display = 'block';
+    
+    // Disparar confeti
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+}    
+    // Guardar en Firebase que hay un ganador con detalles del patrón
+    database.ref('game/winner').set({
+        player: "cantor",
+        message: mensajeDetallado,
+        ronda: tipoRonda,
+        patron: patron,  // Añadir información del patrón
+        timestamp: Date.now()
+    });
 
-        // Mostrar anuncio de ganador
-        function showWinner(message) {
-            winnerText.textContent = message;
-            winnerAnnouncement.style.display = 'block';
-            
-            // Disparar confeti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
-            
-            // Guardar en Firebase que hay un ganador
-            database.ref('game/winner').set({
-                message: message,
-                timestamp: Date.now()
-            });
-        }
 
         // Sacar una carta específica
         function sacarCarta(numero) {
@@ -1605,6 +1651,57 @@ winnerAnnouncement.style.display = 'block';
                     }
                 }
             });
+
+            // Agregar este código en la función initDatabase() después de escuchar cambios en 'game'
+// Reemplazar el listener completo con este:
+database.ref('game/winner').on('value', function(snapshot) {
+    if (snapshot.exists()) {
+        const winnerData = snapshot.val();
+        
+        let mensajeGanador = "";
+        if (winnerData.player === "otrojugador") {
+            mensajeGanador = `¡${winnerData.player} ha ganado!`;
+        } else if (winnerData.player === "cantor") {
+            mensajeGanador = "¡Felicidades! ¡Has ganado!";
+        } else {
+            mensajeGanador = winnerData.message || "¡Alguien ha ganado!";
+        }
+        
+        // Añadir detalles del patrón si están disponibles
+        if (winnerData.patron) {
+            if (winnerData.patron.includes('horizontal')) {
+                const fila = parseInt(winnerData.patron.split('-')[1]) + 1;
+                mensajeGanador += ` con línea horizontal ${fila}`;
+            } else if (winnerData.patron.includes('vertical')) {
+                const columna = parseInt(winnerData.patron.split('-')[1]) + 1;
+                mensajeGanador += ` con línea vertical ${columna}`;
+            } else if (winnerData.patron === 'diagonal-principal') {
+                mensajeGanador += " con diagonal principal";
+            } else if (winnerData.patron === 'diagonal-secundaria') {
+                mensajeGanador += " con diagonal secundaria";
+            } else if (winnerData.patron === 'cuatro-esquinas') {
+                mensajeGanador += " con cuatro esquinas";
+            } else if (winnerData.patron.includes('cuadrado')) {
+                const partes = winnerData.patron.split('-');
+                const fila = parseInt(partes[1]) + 1;
+                const columna = parseInt(partes[2]) + 1;
+                mensajeGanador += ` con cuadrado (fila ${fila}, columna ${columna})`;
+            } else if (winnerData.patron === 'carton-lleno') {
+                mensajeGanador += " con cartón lleno";
+            }
+        }
+        
+        // Si otro jugador ganó, pausar el juego en el cantor también
+        if (winnerData.player && winnerData.player !== 'cantor') {
+            pauseGame();
+            winnerText.textContent = mensajeGanador;
+            winnerAnnouncement.style.display = 'block';
+            
+            // Mostrar mensaje en el tablero
+            showBoardMessage(`${winnerData.player} ha ganado! Juego pausado.`, "info");
+        }
+    }
+});
             
             // Registrar este jugador como cantor
             const playerRef = database.ref('game/players/cantor');
@@ -1614,7 +1711,11 @@ winnerAnnouncement.style.display = 'block';
                 timestamp: Date.now()
             });
             
-            playerRef.onDisconnect().remove();
+            playerRef.onDisconnect().update({
+    connected: false,
+    disconnectedAt: firebase.database.ServerValue.TIMESTAMP
+});
+
         }
 
         // Guardar el estado del juego en Firebase
@@ -1788,50 +1889,56 @@ function loadBoardFromFirebase(boardData) {
             }, 5000);
         }
 
-        // Distribuir mesas a los jugadores
+// Distribuir mesas a los jugadores Y regenerar la mesa del cantor
 function distribuirMesas() {
     showBoardMessage("Distribuyendo mesas a los jugadores...", "info");
     
-    // Generar un nuevo tablero aleatorio sin cartas repetidas
-    let cartasDisponiblesParaTablero = [...cartasLoteria];
-    let nuevoTablero = [];
-    
-    for (let i = 0; i < 16; i++) {
-        if (cartasDisponiblesParaTablero.length === 0) {
-            // Si no hay más cartas disponibles, reiniciar el conjunto
-            cartasDisponiblesParaTablero = [...cartasLoteria];
-        }
+    // PRIMERO: Regenerar el tablero del CANTOR (localmente)
+    initBoard(); 
         
-        const randomIndex = Math.floor(Math.random() * cartasDisponiblesParaTablero.length);
-        const carta = cartasDisponiblesParaTablero[randomIndex];
-        
-        // Remover la carta seleccionada del conjunto disponible para el tablero
-        cartasDisponiblesParaTablero.splice(randomIndex, 1);
-        
-        nuevoTablero.push({
-            numero: carta.numero,
-            marcado: false
-        });
-    }
-    
-    // Enviar el NUEVO tablero aleatorio a todos los jugadores
-    database.ref('game/distributedBoard').set({
-        board: nuevoTablero,
-        timestamp: Date.now()
-    });
+    showBoardMessage("Nueva mesa generada", "success");
 }
 
         function reiniciarJuego() {
-    winnerAnnouncement.style.display = 'none';
-    gamePaused = false;
-    slideBtn.disabled = false;
-    randomBtn.disabled = false;
-    cartaSelector.disabled = false;
-    barajearCartas();
-    database.ref('game/winner').remove();
-    database.ref('game/paused').set(false);
-    statusText.textContent = 'Juego en curso';
-    showBoardMessage("Juego reiniciado", "success");
+    if (rondaActual === 'primera') {
+        // Continuar a la segunda ronda
+        rondaActual = 'segunda';
+        winnerAnnouncement.style.display = 'none';
+        gamePaused = false;
+        statusText.textContent = 'Segunda ronda: Carta llena';
+        
+        // Habilitar controles
+        slideBtn.disabled = false;
+        randomBtn.disabled = false;
+        cartaSelector.disabled = false;
+        
+        // No reiniciar las cartas, mantener el estado actual
+        database.ref('game/winner').remove();
+        database.ref('game/paused').set(false);
+        database.ref('game/ronda').set('segunda');
+        
+        showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
+    } else {
+        // Reinicio completo del juego
+        rondaActual = 'primera';
+        patronGanador = null;
+        winnerAnnouncement.style.display = 'none';
+        gamePaused = false;
+        
+        // Habilitar controles
+        slideBtn.disabled = false;
+        randomBtn.disabled = false;
+        cartaSelector.disabled = false;
+        
+        // Reiniciar completamente el juego
+        barajearCartas();
+        limpiarFichas();
+        database.ref('game/winner').remove();
+        database.ref('game/paused').set(false);
+        database.ref('game/ronda').set('primera');
+        
+        showBoardMessage("Juego reiniciado completamente", "success");
+    }
 }
     </script>
 </body>

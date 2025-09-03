@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotería Mexicana</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --color-primary: #00bcd4; /* main color, a vibrant cyan */
+            --color-secondary: #00e5ff;
+            --color-text-light: #f0f0f0;
+            --color-text-dark: #333;
+            --color-bg-dark: #121212;
+            --color-bg-container: #1e1e1e;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Particles.js background */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Floating elements from site */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .floating-element {
+            position: absolute;
+            background-color: var(--color-primary);
+            opacity: 0.15;
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: float 20s infinite ease-in-out;
+        }
+        .floating-element:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 10%; animation-delay: 5s; }
+        .floating-element:nth-child(3) { width: 100px; height: 100px; top: 40%; right: 25%; animation-delay: 10s; }
+        .floating-element:nth-child(4) { width: 250px; height: 250px; bottom: 5%; left: 30%; animation-delay: 15s; }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            50% { transform: translateY(-30px) rotate(180deg) scale(1.1); }
+            100% { transform: translateY(0) rotate(360deg) scale(1); }
+        }
+
+        /* Mouse spotlight effect */
+        .spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 188, 212, 0.2) 0%, transparent 40%);
+            z-index: 2;
+            pointer-events: none;
+            transition: all 0.1s ease-out;
+        }
+
+        /* Matrix effect for shuffling */
+        .matrix-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #0ff; /* Cyan */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2rem;
+            text-align: center;
+        }
+        .matrix-overlay canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .matrix-overlay h2 {
+            z-index: 100;
+        }
+
+        .loteria-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            background-color: var(--color-bg-container);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 188, 212, 0.3);
+            padding: 30px;
+            position: relative;
+            z-index: 10;
+            border: 2px solid var(--color-primary);
+            transition: all 0.5s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            font-size: 3rem;
+            text-shadow: 2px 2px 5px rgba(0, 188, 212, 0.5);
+            transition: all 0.5s ease;
+        }
+
+        .controls-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .controls, .controls-secondary, .slide-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .controls-secondary {
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+            color: var(--color-bg-dark);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 188, 212, 0.4);
+            position: relative;
+            overflow: hidden;
+            flex: 1 1 auto;
+            min-width: 150px;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.4);
+            opacity: 0;
+            border-radius: 50%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 188, 212, 0.6);
+        }
+        .btn:hover::after {
+            animation: pulse 1s ease-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0, 0); opacity: 0.5; }
+            100% { transform: scale(20, 20); opacity: 0; }
+        }
+        .btn:disabled {
+            background: #444;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.5;
+        }
+
+        .carta-selector {
+            padding: 12px 18px;
+            border: 2px solid var(--color-primary);
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+            background-color: var(--color-bg-container);
+            color: var(--color-text-light);
+            transition: all 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%2300bcd4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+
+        .slide-speed {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+        .slide-speed input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 150px;
+            height: 8px;
+            background: #333;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        .slide-speed input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--color-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        .slide-speed input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--color-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .carta-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        /* New styling for the full-image card */
+        .carta {
+            width: 320px;
+            height: 420px;
+            border: 3px solid var(--color-primary);
+            border-radius: 15px;
+            background: var(--color-bg-container);
+            box-shadow: 0 10px 25px rgba(0, 188, 212, 0.25);
+            margin-bottom: 25px;
+            transition: transform 0.6s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            
+            /* Center the image within the container */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carta-imagen {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* The image will scale to fit within the container */
+            z-index: 1;
+            transition: all 0.3s;
+            background-color: #0d0d0d;
+        }
+
+        /* Styling for the new drawn cards list */
+        .drawn-cards-list {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 900px;
+            margin: 40px auto 0;
+            position: relative;
+        }
+
+        .drawn-cards-list h3 {
+            color: var(--color-primary);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid rgba(0, 188, 212, 0.5);
+            border-radius: 8px;
+        }
+        
+        .cards-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .cards-grid::-webkit-scrollbar-track {
+            background: #2b2b2b;
+            border-radius: 10px;
+        }
+
+        .cards-grid::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 10px;
+            border: 2px solid #2b2b2b;
+        }
+        
+        .drawn-card-item {
+            background-color: #2b2b2b;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--color-primary);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .drawn-card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 188, 212, 0.2);
+        }
+
+        .drawn-card-item .card-number {
+            font-weight: bold;
+            color: var(--color-primary);
+            font-size: 1.1rem;
+        }
+
+        .drawn-card-item .card-name {
+            flex-grow: 1;
+            color: var(--color-text-light);
+            font-size: 1rem;
+        }
+
+        /* Animations from original code */
+        @keyframes flipIn {
+            0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+        }
+        .flip-animation { animation: flipIn 0.6s ease forwards; }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .celebrate { animation: celebrate 0.5s ease-in-out 3; }
+
+        /* Media Queries for Mobile */
+        @media (max-width: 768px) {
+            .loteria-container {
+                padding: 15px;
+                margin: 20px auto;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .controls-wrapper {
+                gap: 10px;
+            }
+            .controls, .controls-secondary, .slide-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn {
+                width: 100%;
+                min-width: unset;
+            }
+            .carta-selector {
+                width: 100%;
+            }
+            .carta {
+                width: 280px;
+                height: 380px;
+                padding: 15px;
+            }
+            .carta-imagen {
+                width: 100%;
+                height: 100%;
+            }
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="connections" id="connections"></div>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+    <div class="spotlight" id="spotlight"></div>
+    
+    <div class="matrix-overlay" id="matrixOverlay">
+        <h2>Barajeando cartas...</h2>
+    </div>
+
+    <div class="loteria-container">
+        <h1>Lotería Mexicana</h1>
+
+        <div class="controls-wrapper">
+            <div class="controls">
+                <select class="carta-selector" id="cartaSelector">
+                    <option value="">Selecciona una carta</option>
+                </select>
+                <button class="btn" id="randomBtn">Carta Aleatoria</button>
+            </div>
+    
+            <div class="controls-secondary">
+                <button class="btn" id="shuffleBtn">Barajear</button>
+                <button class="btn" id="slideBtn">Correr Cartas</button>
+                <button class="btn" id="stopBtn" disabled>Detener</button>
+            </div>
+    
+            <div class="slide-controls">
+                <div class="slide-speed">
+                    <label for="slideSpeed">Velocidad:</label>
+                    <input type="range" id="slideSpeed" min="2000" max="10000" step="500" value="5000">
+                    <span id="speedValue">5.0s</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="carta-display">
+            <div class="carta" id="cartaDisplay">
+                <img class="carta-imagen" id="cartaImagen" src="" alt="Carta de lotería">
+            </div>
+        </div>
+
+        <div class="drawn-cards-list">
+            <h3>Cartas ya Sacadas</h3>
+            <div class="cards-grid" id="cardsGrid"></div>
+        </div>
+    </div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        const cartasLoteria = [
+    { numero: 1, nombre: "El Gallo", imagen: "LoteriaEstampas/pagina1_img0.jpeg", descripcion: "Simboliza la vigilancia y la valentía." },
+    { numero: 2, nombre: "El Diablito", imagen: "LoteriaEstampas/pagina2_img0.jpeg", descripcion: "Representa la tentación y el mal." },
+    { numero: 3, nombre: "La Dama", imagen: "LoteriaEstampas/pagina3_img0.jpeg", descripcion: "Simboliza la elegancia y la belleza femenina." },
+    { numero: 4, nombre: "El Catrín", imagen: "LoteriaEstampas/pagina4_img0.jpeg", descripcion: "Representa a un hombre elegante y refinado." },
+    { numero: 5, nombre: "El Paraguas", imagen: "LoteriaEstampas/pagina5_img0.jpeg", descripcion: "Simboliza protección y resguardo." },
+    { numero: 6, nombre: "La Sirena", imagen: "LoteriaEstampas/pagina6_img0.jpeg", descripcion: "Representa la seducción y el misterio." },
+    { numero: 7, nombre: "La Escalera", imagen: "LoteriaEstampas/pagina7_img0.jpeg", descripcion: "Simboliza ascenso y progreso." },
+    { numero: 8, nombre: "La Botella", imagen: "LoteriaEstampas/pagina8_img0.jpeg", descripcion: "Representa celebración y alegría." },
+    { numero: 9, nombre: "El Barril", imagen: "LoteriaEstampas/pagina9_img0.jpeg", descripcion: "Simboliza abundancia y provisiones." },
+    { numero: 10, nombre: "El Árbol", imagen: "LoteriaEstampas/pagina10_img0.jpeg", descripcion: "Representa la vida y la naturaleza." },
+    { numero: 11, nombre: "El Melón", imagen: "LoteriaEstampas/pagina11_img0.jpeg", descripcion: "Simboliza la dulzura y la fertilidad." },
+    { numero: 12, nombre: "El Valiente", imagen: "LoteriaEstampas/pagina12_img0.jpeg", descripcion: "Representa el coraje y la fuerza." },
+    { numero: 13, nombre: "El Gorrito", imagen: "LoteriaEstampas/pagina13_img0.jpeg", descripcion: "Simboliza protección y humildad." },
+    { numero: 14, nombre: "La Muerte", imagen: "LoteriaEstampas/pagina14_img0.jpeg", descripcion: "Representa el fin de un ciclo y transformación." },
+    { numero: 15, nombre: "La Pera", imagen: "LoteriaEstampas/pagina15_img0.jpeg", descripcion: "Simboliza la salud y la dulzura." },
+    { numero: 16, nombre: "La Bandera", imagen: "LoteriaEstampas/pagina16_img0.jpeg", descripcion: "Representa patriotismo e identidad." },
+    { numero: 17, nombre: "El Bandolón", imagen: "LoteriaEstampas/pagina17_img0.jpeg", descripcion: "Simboliza la música y la armonía." },
+    { numero: 18, nombre: "El Violoncello", imagen: "LoteriaEstampas/pagina18_img0.jpeg", descripcion: "Representa la elegancia en la música." },
+    { numero: 19, nombre: "La Garza", imagen: "LoteriaEstampas/pagina19_img0.jpeg", descripcion: "Simboliza la gracia y la libertad." },
+    { numero: 20, nombre: "El Pájaro", imagen: "LoteriaEstampas/pagina20_img0.jpeg", descripcion: "Representa la libertad y el espíritu." },
+    { numero: 21, nombre: "La Mano", imagen: "LoteriaEstampas/pagina21_img0.jpeg", descripcion: "Simboliza el trabajo y la acción." },
+    { numero: 22, nombre: "La Bota", imagen: "LoteriaEstampas/pagina22_img0.jpeg", descripcion: "Representa el viaje y el camino." },
+    { numero: 23, nombre: "La Luna", imagen: "LoteriaEstampas/pagina23_img0.jpeg", descripcion: "Simboliza la intuición y los ciclos." },
+    { numero: 24, nombre: "El Cotorro", imagen: "LoteriaEstampas/pagina24_img0.jpeg", descripcion: "Representa la comunicación y la sociabilidad." },
+    { numero: 25, nombre: "El Borracho", imagen: "LoteriaEstampas/pagina25_img0.jpeg", descripcion: "Simboliza los excesos y la diversión." },
+    { numero: 26, nombre: "El Negrito", imagen: "LoteriaEstampas/pagina26_img0.jpeg", descripcion: "Representa la alegría y la festividad." },
+    { numero: 27, nombre: "El Corazón", imagen: "LoteriaEstampas/pagina27_img0.jpeg", descripcion: "Simboliza el amor y los sentimientos." },
+    { numero: 28, nombre: "La Sandía", imagen: "LoteriaEstampas/pagina28_img0.jpeg", descripcion: "Representa la abundancia y la frescura." },
+    { numero: 29, nombre: "El Tambor", imagen: "LoteriaEstampas/pagina29_img0.jpeg", descripcion: "Simboliza la celebración y el ritmo." },
+    { numero: 30, nombre: "El Camarón", imagen: "LoteriaEstampas/pagina30_img0.jpeg", descripcion: "Representa la adaptabilidad y la perseverancia." },
+    { numero: 31, nombre: "Las Jaras", imagen: "LoteriaEstampas/pagina31_img0.jpeg", descripcion: "Simbolizan la dirección y el propósito." },
+    { numero: 32, nombre: "El Músico", imagen: "LoteriaEstampas/pagina32_img0.jpeg", descripcion: "Representa el arte y la expresión." },
+    { numero: 33, nombre: "La Araña", imagen: "LoteriaEstampas/pagina33_img0.jpeg", descripcion: "Simboliza la creatividad y la paciencia." },
+    { numero: 34, nombre: "El Soldado", imagen: "LoteriaEstampas/pagina34_img0.jpeg", descripcion: "Representa la disciplina y el honor." },
+    { numero: 35, nombre: "La Estrella", imagen: "LoteriaEstampas/pagina35_img0.jpeg", descripcion: "Simboliza la guía y la esperanza." },
+    { numero: 36, nombre: "El Cazo", imagen: "LoteriaEstampas/pagina36_img0.jpeg", descripcion: "Representa la cocina y el sustento." },
+    { numero: 37, nombre: "El Mundo", imagen: "LoteriaEstampas/pagina37_img0.jpeg", descripcion: "Simboliza la totalidad y la conexión." },
+    { numero: 38, nombre: "El Apache", imagen: "LoteriaEstampas/pagina38_img0.jpeg", descripcion: "Representa la fuerza y la resistencia." },
+    { numero: 39, nombre: "El Nopal", imagen: "LoteriaEstampas/pagina39_img0.jpeg", descripcion: "Simboliza la identidad mexicana y la resistencia." },
+    { numero: 40, nombre: "El Alacrán", imagen: "LoteriaEstampas/pagina40_img0.jpeg", descripcion: "Representa el peligro y la defensa." },
+    { numero: 41, nombre: "La Rosa", imagen: "LoteriaEstampas/pagina41_img0.jpeg", descripcion: "Simboliza el amor y la belleza." },
+    { numero: 42, nombre: "La Calavera", imagen: "LoteriaEstampas/pagina42_img0.jpeg", descripcion: "Representa la muerte y el ciclo de la vida." },
+    { numero: 43, nombre: "La Campana", imagen: "LoteriaEstampas/pagina43_img0.jpeg", descripcion: "Simboliza el llamado y la celebración." },
+    { numero: 44, nombre: "El Cantarito", imagen: "LoteriaEstampas/pagina44_img0.jpeg", descripcion: "Representa la tradición y la frescura." },
+    { numero: 45, nombre: "El Venado", imagen: "LoteriaEstampas/pagina45_img0.jpeg", descripcion: "Simboliza la agilidad y la conexión con la naturaleza." },
+    { numero: 46, nombre: "El Sol", imagen: "LoteriaEstampas/pagina46_img0.jpeg", descripcion: "Representa la vida y la energía." },
+    { numero: 47, nombre: "La Corona", imagen: "LoteriaEstampas/pagina47_img0.jpeg", descripcion: "Simboliza el poder y la realeza." },
+    { numero: 48, nombre: "La Chalupa", imagen: "LoteriaEstampas/pagina48_img0.jpeg", descripcion: "Representa el transporte y el comercio." },
+    { numero: 49, nombre: "El Pino", imagen: "LoteriaEstampas/pagina49_img0.jpeg", descripcion: "Simboliza la longevidad y la estabilidad." },
+    { numero: 50, nombre: "El Pescado", imagen: "LoteriaEstampas/pagina50_img0.jpeg", descripcion: "Representa la abundancia y la prosperidad." },
+    { numero: 51, nombre: "La Palma", imagen: "LoteriaEstampas/pagina51_img0.jpeg", descripcion: "Simboliza la victoria y el éxito." },
+    { numero: 52, nombre: "La Maceta", imagen: "LoteriaEstampas/pagina52_img0.jpeg", descripcion: "Representa el crecimiento y la fertilidad." },
+    { numero: 53, nombre: "El Arpa", imagen: "LoteriaEstampas/pagina53_img0.jpeg", descripcion: "Simboliza la música y la armonía celestial." },
+    { numero: 54, nombre: "La Rana", imagen: "LoteriaEstampas/pagina54_img0.jpeg", descripcion: "Representa la transformación y la adaptabilidad." }
+];
+
+        const LoteriaApp = {
+            dom: {
+                ...Object.fromEntries(
+                    ['cartaSelector', 'randomBtn', 'shuffleBtn', 'slideBtn', 'stopBtn', 'slideSpeed', 'speedValue',
+                     'cartaImagen', 'cartaDisplay', 'confettiCanvas', 'matrixOverlay', 'cardsGrid', 'spotlight']
+                        .map(id => [id, document.getElementById(id)])
+                ),
+            },
+
+            estado: {
+                intervalo: null,
+                velocidad: 5000,
+                cartasDisponibles: [],
+                cartasSacadas: [],
+                isSliding: false,
+                isPaused: false
+            },
+
+            inicializar: function() {
+                this.llenarSelector();
+                this.barajearCartas(false);
+                this.configurarEventos();
+                this.inicializarEfectos();
+                this.mostrarCarta(this.estado.cartasDisponibles[0].numero);
+            },
+
+            inicializarEfectos: function() {
+                // Initialize particles.js with new colors
+                particlesJS('particles-js', {
+                    "particles": {
+                        "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                        "color": { "value": "#00bcd4" }, 
+                        "shape": {
+                            "type": ["circle", "triangle", "polygon"],
+                            "stroke": { "width": 0, "color": "#000000" },
+                            "polygon": { "nb_sides": 5 }
+                        },
+                        "opacity": {
+                            "value": 0.5, "random": false, "anim": { "enable": false, "speed": 1, "opacity_min": 0.1, "sync": false }
+                        },
+                        "size": {
+                            "value": 3, "random": true, "anim": { "enable": false, "speed": 40, "size_min": 0.1, "sync": false }
+                        },
+                        "line_linked": { "enable": true, "distance": 150, "color": "#00bcd4", "opacity": 0.4, "width": 1 },
+                        "move": { "enable": true, "speed": 6, "direction": "none", "random": false, "straight": false, "out_mode": "out" }
+                    },
+                    "interactivity": {
+                        "detect_on": "canvas",
+                        "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                        "modes": { "repulse": { "distance": 100 } }
+                    },
+                    "retina_detect": true
+                });
+            },
+
+            llenarSelector: function() {
+                cartasLoteria.forEach(carta => {
+                    const option = document.createElement('option');
+                    option.value = carta.numero;
+                    option.textContent = `${carta.numero}. ${carta.nombre}`;
+                    this.dom.cartaSelector.appendChild(option);
+                });
+            },
+
+            configurarEventos: function() {
+                this.dom.cartaSelector.addEventListener('change', () => {
+                    if (this.dom.cartaSelector.value) {
+                        this.mostrarCartaManual(parseInt(this.dom.cartaSelector.value));
+                    }
+                });
+                this.dom.randomBtn.addEventListener('click', () => this.mostrarCartaAleatoria());
+                this.dom.shuffleBtn.addEventListener('click', () => this.barajearCartas());
+                this.dom.slideBtn.addEventListener('click', this.toggleSlide.bind(this));
+                this.dom.stopBtn.addEventListener('click', this.detenerSlide.bind(this));
+                this.dom.slideSpeed.addEventListener('input', () => {
+                    this.estado.velocidad = parseInt(this.dom.slideSpeed.value);
+                    this.dom.speedValue.textContent = `${(this.estado.velocidad / 1000).toFixed(1)}s`;
+                    if (this.estado.isSliding) {
+                        this.detenerSlide();
+                        this.iniciarSlide();
+                    }
+                });
+                window.addEventListener('mousemove', this.moverSpotlight.bind(this));
+            },
+            
+            moverSpotlight: function(e) {
+                if(this.dom.spotlight) {
+                    this.dom.spotlight.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, rgba(0, 188, 212, 0.2) 0%, transparent 40%)`;
+                }
+            },
+
+            mostrarCarta: function(numero) {
+                const carta = cartasLoteria.find(c => c.numero === numero);
+                if (carta) {
+                    this.dom.cartaDisplay.classList.remove('flip-animation');
+                    void this.dom.cartaDisplay.offsetWidth; // Trigger reflow
+                    this.dom.cartaDisplay.classList.add('flip-animation');
+                    this.dom.cartaImagen.src = carta.imagen;
+                    this.dom.cartaImagen.alt = carta.nombre;
+                }
+            },
+
+            mostrarCartaAleatoria: function() {
+                this.detenerSlide(); // Pausar si está corriendo
+                if (this.estado.cartasDisponibles.length === 0) {
+                    this.lanzarConfeti();
+                    this.dom.cartaDisplay.classList.add('celebrate');
+                    alert("¡Lotería! Se han sacado todas las cartas. Barajea para empezar de nuevo.");
+                    setTimeout(() => this.dom.cartaDisplay.classList.remove('celebrate'), 3000);
+                    return;
+                }
+                const indiceAleatorio = Math.floor(Math.random() * this.estado.cartasDisponibles.length);
+                const carta = this.estado.cartasDisponibles.splice(indiceAleatorio, 1)[0];
+                this.mostrarCarta(carta.numero);
+                this.dom.cartaSelector.value = carta.numero;
+                this.estado.cartasSacadas.push(carta);
+                this.actualizarListaDeCartasSacadas();
+            },
+
+            mostrarCartaManual: function(numero) {
+                this.detenerSlide();
+                const carta = cartasLoteria.find(c => c.numero === numero);
+                this.mostrarCarta(carta.numero);
+                const indiceEnCartasDisponibles = this.estado.cartasDisponibles.findIndex(c => c.numero === numero);
+                if (indiceEnCartasDisponibles !== -1) {
+                    const cartaSacada = this.estado.cartasDisponibles.splice(indiceEnCartasDisponibles, 1)[0];
+                    this.estado.cartasSacadas.push(cartaSacada);
+                    this.actualizarListaDeCartasSacadas();
+                }
+            },
+
+            barajearCartas: function(withAnimation = true) {
+                this.detenerSlide();
+
+                this.dom.shuffleBtn.disabled = true;
+                this.dom.randomBtn.disabled = true;
+                this.dom.slideBtn.disabled = true;
+                this.dom.cartaSelector.disabled = true;
+
+                if (withAnimation) {
+                    this.iniciarMatrixEffect();
+                }
+
+                setTimeout(() => {
+                    this.estado.cartasDisponibles = [...cartasLoteria];
+                    this.estado.cartasSacadas = [];
+                    this.dom.cardsGrid.innerHTML = ''; // Clear the new cards grid
+                    this.mostrarCarta(this.estado.cartasDisponibles[Math.floor(Math.random() * this.estado.cartasDisponibles.length)].numero);
+
+                    this.dom.shuffleBtn.disabled = false;
+                    this.dom.randomBtn.disabled = false;
+                    this.dom.slideBtn.disabled = false;
+                    this.dom.cartaSelector.disabled = false;
+
+                    if (withAnimation) {
+                       this.detenerMatrixEffect();
+                    }
+                }, 2000);
+            },
+
+            toggleSlide: function() {
+                if (this.estado.isSliding) {
+                    this.pausarSlide();
+                } else {
+                    this.iniciarSlide();
+                }
+            },
+
+            iniciarSlide: function() {
+                if (this.estado.cartasDisponibles.length === 0) {
+                    alert("¡Lotería! Se han sacado todas las cartas. Barajea para empezar de nuevo.");
+                    return;
+                }
+                this.dom.slideBtn.textContent = 'Pausar';
+                this.dom.stopBtn.disabled = false;
+                this.dom.shuffleBtn.disabled = true;
+                this.dom.randomBtn.disabled = true;
+                this.dom.cartaSelector.disabled = true;
+
+                this.estado.isSliding = true;
+                this.estado.isPaused = false;
+
+                this.estado.intervalo = setInterval(() => {
+                    if (this.estado.cartasDisponibles.length === 0) {
+                        this.detenerSlide();
+                        this.lanzarConfeti();
+                        alert("¡Lotería! Se han sacado todas las cartas. Barajea para empezar de nuevo.");
+                        return;
+                    }
+                    this.mostrarCartaAleatoriaEnSlide();
+                }, this.estado.velocidad);
+            },
+
+            pausarSlide: function() {
+                clearInterval(this.estado.intervalo);
+                this.estado.isSliding = false;
+                this.estado.isPaused = true;
+                this.dom.slideBtn.textContent = 'Correr Cartas';
+            },
+
+            detenerSlide: function() {
+                clearInterval(this.estado.intervalo);
+                this.estado.isSliding = false;
+                this.estado.isPaused = false;
+                this.estado.intervalo = null;
+                this.dom.slideBtn.textContent = 'Correr Cartas';
+                this.dom.stopBtn.disabled = true;
+                this.dom.shuffleBtn.disabled = false;
+                this.dom.randomBtn.disabled = false;
+                this.dom.cartaSelector.disabled = false;
+            },
+
+            mostrarCartaAleatoriaEnSlide: function() {
+                const indiceAleatorio = Math.floor(Math.random() * this.estado.cartasDisponibles.length);
+                const carta = this.estado.cartasDisponibles.splice(indiceAleatorio, 1)[0];
+                this.mostrarCarta(carta.numero);
+                this.dom.cartaSelector.value = carta.numero;
+                this.estado.cartasSacadas.push(carta);
+                this.actualizarListaDeCartasSacadas();
+            },
+
+            // New function to update the text-based list
+            actualizarListaDeCartasSacadas: function() {
+                this.dom.cardsGrid.innerHTML = '';
+                this.estado.cartasSacadas.forEach(carta => {
+                    const cardItem = document.createElement('div');
+                    cardItem.classList.add('drawn-card-item');
+                    cardItem.innerHTML = `<span class="card-number">${carta.numero}.</span> <span class="card-name">${carta.nombre}</span>`;
+                    this.dom.cardsGrid.appendChild(cardItem);
+                });
+                this.dom.cardsGrid.scrollTop = this.dom.cardsGrid.scrollHeight; // Scroll to the bottom
+            },
+
+            lanzarConfeti: function() {
+                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000, colors: ['#00bcd4', '#00e5ff', '#fff'] };
+                const end = Date.now() + (3 * 1000);
+                const frame = () => {
+                    confetti({ ...defaults, particleCount: 25, origin: { x: Math.random(), y: Math.random() - 0.2 } });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                };
+                frame();
+            },
+
+            iniciarMatrixEffect: function() {
+                this.dom.matrixOverlay.style.opacity = '1';
+                this.dom.matrixOverlay.style.pointerEvents = 'auto';
+
+                const canvas = document.createElement('canvas');
+                this.dom.matrixOverlay.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                const matrixChars = "aB3D9_kL+fG7|Zx1Q*{eR}5/0sT[U]vC=Y-M(2)wN4\\j8@h^p~oI6qS$A!mE?bV#tF%yJ9zO1uK<r>cG2lD8+vB{w}5nX|q4/0pY=Z-M(3)j7\\s6@f^k~eR$h!o?iC%tA#uL9mQ8yV1cP>g<zE2aW0b";
+                const fontSize = 16;
+                const columns = canvas.width / fontSize;
+                const drops = Array(Math.floor(columns)).fill(1);
+
+                const draw = () => {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "#0ff"; // Cyan
+                    ctx.font = `${fontSize}px monospace`;
+
+                    for (let i = 0; i < drops.length; i++) {
+                        const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+                        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                            drops[i] = 0;
+                        }
+                        drops[i]++;
+                    }
+                };
+                this.matrixInterval = setInterval(draw, 33);
+            },
+
+            detenerMatrixEffect: function() {
+                clearInterval(this.matrixInterval);
+                this.dom.matrixOverlay.style.opacity = '0';
+                this.dom.matrixOverlay.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    this.dom.matrixOverlay.innerHTML = '<h2>Barajeando cartas...</h2>';
+                }, 500);
+            }
+        };
+
+        window.addEventListener('load', () => LoteriaApp.inicializar());
+    </script>
+</body>
+</html>
