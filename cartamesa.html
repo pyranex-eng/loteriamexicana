@@ -1321,58 +1321,61 @@ function verificarCartonLleno() {
     return true;
 }
 
-function showWinner(message, tipoRonda, patron) {
-    let mensajeDetallado = message;
-    
-    // Añadir detalles del patrón si está disponible
-    if (patron) {
-        if (patron.includes('horizontal')) {
-            const fila = parseInt(patron.split('-')[1]) + 1;
-            mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
-        } else if (patron.includes('vertical')) {
-            const columna = parseInt(patron.split('-')[1]) + 1;
-            mensajeDetallado = `¡Línea vertical ${columna} completa!`;
-        } else if (patron.includes('diagonal-principal')) {
-            mensajeDetallado = "¡Diagonal principal completa!";
-        } else if (patron.includes('diagonal-secundaria')) {
-            mensajeDetallado = "¡Diagonal secundaria completa!";
-        } else if (patron.includes('cuatro-esquinas')) {
-            mensajeDetallado = "¡Cuatro esquinas completas!";
-        } else if (patron.includes('cuadrado')) {
-            const partes = patron.split('-');
-            const fila = parseInt(partes[1]) + 1;
-            const columna = parseInt(partes[2]) + 1;
-            mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+// Modificación en la función showWinner para el cantor
+    function showWinner(message, tipoRonda, patron) {
+        let mensajeDetallado = message;
+        // Añadir detalles del patrón si está disponible
+        if (patron) {
+            if (patron.includes('horizontal')) {
+                const fila = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
+            } else if (patron.includes('vertical')) {
+                const columna = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea vertical ${columna} completa!`;
+            } else if (patron.includes('diagonal-principal')) {
+                mensajeDetallado = "¡Diagonal principal completa!";
+            } else if (patron.includes('diagonal-secundaria')) {
+                mensajeDetallado = "¡Diagonal secundaria completa!";
+            } else if (patron.includes('cuatro-esquinas')) {
+                mensajeDetallado = "¡Cuatro esquinas completas!";
+            } else if (patron.includes('cuadrado')) {
+                const partes = patron.split('-');
+                const fila = parseInt(partes[1]) + 1;
+                const columna = parseInt(partes[2]) + 1;
+                mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+            } else if (patron === 'carton-lleno') {
+                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
+            }
         }
-    }
 
         winnerText.textContent = mensajeDetallado;
-    
-    // Configurar el texto del botón según la ronda
-    if (tipoRonda === 'primera') {
-        newGameBtn.textContent = 'Continuar a la carta llena';
-    } else {
-        newGameBtn.textContent = 'Nuevo Juego';
-    }
-    
-    winnerAnnouncement.style.display = 'block';
-    
-    // Disparar confeti
-    confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-    });
-}    
-    // Guardar en Firebase que hay un ganador con detalles del patrón
-    database.ref('game/winner').set({
-        player: "cantor",
-        message: mensajeDetallado,
-        ronda: tipoRonda,
-        patron: patron,  // Añadir información del patrón
-        timestamp: Date.now()
-    });
 
+        // Configurar el texto del botón según la ronda
+        if (tipoRonda === 'primera') {
+            newGameBtn.textContent = 'Continuar la carta llena';
+        } else {
+            newGameBtn.textContent = 'Nuevo Juego';
+        }
+
+        winnerAnnouncement.style.display = 'block';
+
+        // Disparar confeti
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+
+        // Guardar en Firebase que hay un ganador con detalles del patrón
+        // Se asegura que el jugador sea "cantor"
+        database.ref('game/winner').set({
+            player: "cantor",
+            message: mensajeDetallado,
+            ronda: tipoRonda,
+            patron: patron, // Añadir información del patrón
+            timestamp: Date.now()
+        });
+    }
 
         // Sacar una carta específica
         function sacarCarta(numero) {
@@ -1656,60 +1659,67 @@ function showWinner(message, tipoRonda, patron) {
 // Reemplazar el listener completo con este:
             // Agregar este código en la función initDatabase() después de escuchar cambios en 'game'
 database.ref('game/winner').on('value', function(snapshot) {
-    if (snapshot.exists()) {
-        const winnerData = snapshot.val();
-        
-        let mensajeGanador = "";
-        if (winnerData.player === "otrojugador") {
-            mensajeGanador = `¡El Jugador ha ganado!`; // Mensaje específico para el otro jugador
-        } else if (winnerData.player === "cantor") {
-            mensajeGanador = "¡Felicidades! ¡Has ganado!";
+        if (snapshot.exists()) {
+            const winnerData = snapshot.val();
+
+            let mensajeGanador = "";
+            // Determina el mensaje basado en quién ganó
+            if (winnerData.player === "cantor") {
+                mensajeGanador = "¡Felicidades! ¡Has ganado!";
+            } else {
+                // Si el ganador no es el cantor, se asume que es otro jugador.
+                // Se puede expandir para mostrar el nombre específico del jugador si se implementan IDs únicas.
+                mensajeGanador = `¡${winnerData.player} ha ganado!`;
+            }
+
+            // Añadir detalles del patrón si están disponibles
+            if (winnerData.patron) {
+                if (winnerData.patron.includes('horizontal')) {
+                    const fila = parseInt(winnerData.patron.split('-')[1]) + 1;
+                    mensajeGanador += ` con línea horizontal ${fila}`;
+                } else if (winnerData.patron.includes('vertical')) {
+                    const columna = parseInt(winnerData.patron.split('-')[1]) + 1;
+                    mensajeGanador += ` con línea vertical ${columna}`;
+                } else if (winnerData.patron === 'diagonal-principal') {
+                    mensajeGanador += " con diagonal principal";
+                } else if (winnerData.patron === 'diagonal-secundaria') {
+                    mensajeGanador += " con diagonal secundaria";
+                } else if (winnerData.patron === 'cuatro-esquinas') {
+                    mensajeGanador += " con cuatro esquinas";
+                } else if (winnerData.patron.includes('cuadrado')) {
+                    const partes = winnerData.patron.split('-');
+                    const fila = parseInt(partes[1]) + 1;
+                    const columna = parseInt(partes[2]) + 1;
+                    mensajeGanador += ` con cuadrado (fila ${fila}, columna ${columna})`;
+                } else if (winnerData.patron === 'carton-lleno') {
+                    mensajeGanador += " con cartón lleno";
+                }
+            }
+
+            // Pausar el juego para el cantor si hay un ganador (sea el mismo o un jugador)
+            pauseGame();
+            winnerText.textContent = mensajeGanador;
+            winnerAnnouncement.style.display = 'block';
+
+            // Mostrar un mensaje en el tablero del cantor indicando quién ganó
+            showBoardMessage(`${winnerData.player} ha ganado! Juego pausado.`, "info");
+
         } else {
-            mensajeGanador = winnerData.message || "¡Alguien ha ganado!";
-        }
-        
-        // Añadir detalles del patrón si están disponibles
-        if (winnerData.patron) {
-            if (winnerData.patron.includes('horizontal')) {
-                const fila = parseInt(winnerData.patron.split('-')[1]) + 1;
-                mensajeGanador += ` con línea horizontal ${fila}`;
-            } else if (winnerData.patron.includes('vertical')) {
-                const columna = parseInt(winnerData.patron.split('-')[1]) + 1;
-                mensajeGanador += ` con línea vertical ${columna}`;
-            } else if (winnerData.patron === 'diagonal-principal') {
-                mensajeGanador += " con diagonal principal";
-            } else if (winnerData.patron === 'diagonal-secundaria') {
-                mensajeGanador += " con diagonal secundaria";
-            } else if (winnerData.patron === 'cuatro-esquinas') {
-                mensajeGanador += " con cuatro esquinas";
-            } else if (winnerData.patron.includes('cuadrado')) {
-                const partes = winnerData.patron.split('-');
-                const fila = parseInt(partes[1]) + 1;
-                const columna = parseInt(partes[2]) + 1;
-                mensajeGanador += ` con cuadrado (fila ${fila}, columna ${columna})`;
-            } else if (winnerData.patron === 'carton-lleno') {
-                mensajeGanador += " con cartón lleno";
+            // Si no hay ganador (la propiedad 'winner' fue eliminada), ocultar el anuncio
+            winnerAnnouncement.style.display = 'none';
+            // Asegurarse de que el juego no esté pausado si no hay ganador
+            if (gamePaused && !winnerAnnouncement.style.display === 'block') {
+                gamePaused = false;
+                statusText.textContent = 'Juego en curso'; // O el estado anterior
+                slideBtn.disabled = false;
+                randomBtn.disabled = false;
+                cartaSelector.disabled = false;
+                if (isConnected) {
+                    database.ref('game/paused').set(false);
+                }
             }
         }
-        
-        // Si otro jugador ganó, pausar el juego en el cantor también
-        if (winnerData.player && winnerData.player !== 'cantor') {
-            pauseGame(); // Llama a la función pauseGame() del cantor
-            winnerText.textContent = mensajeGanador;
-            winnerAnnouncement.style.display = 'block';
-            
-            // Mostrar mensaje en el tablero
-            showBoardMessage(`${winnerData.player} ha ganado! Juego pausado.`, "info");
-        } else if (winnerData.player === 'cantor') {
-            // Si el cantor ganó, también muestra el anuncio de ganador
-            winnerText.textContent = mensajeGanador;
-            winnerAnnouncement.style.display = 'block';
-        }
-    } else {
-        // Si no hay ganador, ocultar el anuncio
-        winnerAnnouncement.style.display = 'none';
-    }
-});
+    });
             
             // Registrar este jugador como cantor
             const playerRef = database.ref('game/players/cantor');

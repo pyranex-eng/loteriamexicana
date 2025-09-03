@@ -712,13 +712,10 @@
             requestBoardBtn.addEventListener('click', requestBoard);
             clearBoardBtn.addEventListener('click', clearBoard);
             continueBtn.addEventListener('click', function() {
-    winnerAnnouncement.style.display = 'none';
-    
-    // Si estamos en la primera ronda, esperar a que el cantor continue
-    if (rondaActual === 'primera') {
-        statusText.textContent = 'Esperando a que el cantor continue...';
-    }
-});
+        winnerAnnouncement.style.display = 'none';
+        // El jugador solo espera a que el cantor reinicie o continúe el juego.
+        statusText.textContent = 'Esperando a que el cantor continúe...';
+    });
 
             // Seguir el movimiento del mouse para el efecto de spotlight
             document.addEventListener('mousemove', function(e) {
@@ -854,33 +851,33 @@ function requestBoard() {
             
             // Escuchar cambios en el estado del juego
             database.ref('game').on('value', function(snapshot) {
-                if (snapshot.exists()) {
-                    const gameData = snapshot.val();
+        if (snapshot.exists()) {
+            const gameData = snapshot.val();
 
-                    // En la función initDatabase(), dentro del listener de 'game'
-                    // En la función initDatabase(), dentro del listener de 'game'
-if (gameData.ronda) {
-    rondaActual = gameData.ronda;
-    if (rondaActual === 'segunda') {
-        statusText.textContent = 'Segunda ronda: Carta llena';
-    } else {
-        statusText.textContent = 'Primera ronda';
-    }
-}
+            // Actualizar estado de la ronda
+            if (gameData.ronda) {
+                rondaActual = gameData.ronda;
+                if (rondaActual === 'segunda') {
+                    statusText.textContent = 'Segunda ronda: Carta llena';
+                } else {
+                    statusText.textContent = 'Primera ronda';
+                }
+            }
 
-if (gameData.paused !== undefined) { // Verifica si la propiedad 'paused' existe
-    gamePaused = gameData.paused;
-    if (gamePaused) {
-        statusText.textContent = 'Juego pausado - Esperando reinicio';
-    } else {
-        // Si el juego no está pausado y el cantor está conectado, el juego está en curso
-        if (callerConnected) {
-            statusText.textContent = 'Juego en curso';
-        } else {
-            statusText.textContent = 'Esperando al cantor';
-        }
-    }
-}
+            // Manejar el estado de pausa del juego
+            if (gameData.paused !== undefined) {
+                gamePaused = gameData.paused;
+                if (gamePaused) {
+                    statusText.textContent = 'Juego pausado - Esperando reinicio';
+                } else {
+                    // Si el juego no está pausado y el cantor está conectado, el juego está en curso
+                    if (callerConnected) {
+                        statusText.textContent = 'Juego en curso';
+                    } else {
+                        statusText.textContent = 'Esperando al cantor';
+                    }
+                }
+            }
                     
                     // Verificar si el cantor está conectado
                     if (gameData.players && gameData.players.cantor) {
@@ -910,19 +907,62 @@ if (gameData.paused !== undefined) { // Verifica si la propiedad 'paused' existe
                     }
                     
                     // Verificar si hay un ganador
-                    if (gameData.winner) {
-    if (gameData.winner.player === "otrojugador") {
-        winnerText.textContent = "¡Felicidades! ¡Has ganado!";
-    } else if (gameData.winner.player === "cantor") {
-        winnerText.textContent = "¡El Cantor ha ganado!";
-    } else {
-        // Para compatibilidad con versiones anteriores
-        winnerText.textContent = gameData.winner.message || "¡Alguien ha ganado!";
-    }
-    winnerAnnouncement.style.display = 'block';
-}
+                    // Manejar el anuncio de ganador
+            if (gameData.winner) {
+                const winnerData = gameData.winner;
+                let mensajeGanador = "";
+
+                // Determina el mensaje basado en quién ganó
+                if (winnerData.player === "otrojugador") {
+                    mensajeGanador = "¡Felicidades! ¡Has ganado!";
+                } else if (winnerData.player === "cantor") {
+                    mensajeGanador = "¡El Cantor ha ganado!";
+                } else {
+                    // Para compatibilidad con versiones anteriores o futuros jugadores
+                    mensajeGanador = winnerData.message || "¡Alguien ha ganado!";
                 }
-            });
+
+                // Añadir detalles del patrón si están disponibles
+                if (winnerData.patron) {
+                    if (winnerData.patron.includes('horizontal')) {
+                        const fila = parseInt(winnerData.patron.split('-')[1]) + 1;
+                        mensajeGanador += ` con línea horizontal ${fila}`;
+                    } else if (winnerData.patron.includes('vertical')) {
+                        const columna = parseInt(winnerData.patron.split('-')[1]) + 1;
+                        mensajeGanador += ` con línea vertical ${columna}`;
+                    } else if (winnerData.patron === 'diagonal-principal') {
+                        mensajeGanador += " con diagonal principal";
+                    } else if (winnerData.patron === 'diagonal-secundaria') {
+                        mensajeGanador += " con diagonal secundaria";
+                    } else if (winnerData.patron === 'cuatro-esquinas') {
+                        mensajeGanador += " con cuatro esquinas";
+                    } else if (winnerData.patron.includes('cuadrado')) {
+                        const partes = winnerData.patron.split('-');
+                        const fila = parseInt(partes[1]) + 1;
+                        const columna = parseInt(partes[2]) + 1;
+                        mensajeGanador += ` con cuadrado (fila ${fila}, columna ${columna})`;
+                    } else if (winnerData.patron === 'carton-lleno') {
+                        mensajeGanador += " con cartón lleno";
+                    }
+                }
+
+                // Pausar el juego para el jugador si hay un ganador
+                pauseGame();
+                winnerText.textContent = mensajeGanador;
+                winnerAnnouncement.style.display = 'block';
+
+            } else {
+                // Si no hay ganador (la propiedad 'winner' fue eliminada), ocultar el anuncio
+                winnerAnnouncement.style.display = 'none';
+                // Asegurarse de que el juego no esté pausado si no hay ganador
+                if (gamePaused && !winnerAnnouncement.style.display === 'block') {
+                    gamePaused = false;
+                    statusText.textContent = 'Juego en curso'; // O el estado anterior
+                    // No hay controles que habilitar/deshabilitar en el jugador, solo el estado visual.
+                }
+            }
+        }
+    });
         }
 
         // Registrar este jugador en Firebase
@@ -1065,45 +1105,35 @@ function loadBoardFromLocal(boardData) {
         }
 
         function pauseGame() {
-    gamePaused = true;
-    detenerDesfileCartas(); // Detener el desfile de cartas si está activo
-    statusText.textContent = 'Juego pausado - Esperando reinicio';
-
-    // Deshabilitar controles
-    slideBtn.disabled = true;
-    randomBtn.disabled = true;
-    cartaSelector.disabled = true;
-
-    // Guardar estado de pausa en Firebase
-    if (isConnected) {
-        database.ref('game/paused').set(true);
+        gamePaused = true;
+        statusText.textContent = 'Juego pausado - Esperando reinicio';
+        // No es necesario enviar `game/paused` a Firebase desde el jugador, el cantor ya lo hace.
     }
-    
-}
 
-        // Verificar si hay un ganador
-// Verificar si hay un ganador
 // Verificar si hay un ganador
 function checkForWinner() {
-    if (gamePaused) return;
-    
-    // Verificar según la ronda actual
-    if (rondaActual === 'primera') {
-        // Verificar patrones de primera ronda (líneas, esquinas, etc.)
-        if (verificarPatronesPrimeraRonda()) {
-            pauseGame(); // Pausa el juego del jugador
-            return true;
-        }
-    } else if (rondaActual === 'segunda') {
-        // Verificar cartón lleno para la segunda ronda
-        if (verificarCartonLleno()) {
-            showWinner("¡Cartón lleno! ¡Lotería!", 'segunda', 'carton-lleno'); // Asegúrate de pasar el patrón
-            pauseGame(); // Pausa el juego del jugador
-            return true;
+        if (gamePaused) return;
+        // ... (lógica de verificación de patrones) ...
+        if (verificarPatron()) { // Ejemplo simplificado
+            showWinner("¡Lotería!", 'primera');
+            pauseGame();
+            return;
         }
     }
-    return false;
-}
+
+    function showWinner(message, tipoRonda, patron) {
+        let mensajeDetallado = message;
+        // ... (lógica para construir mensaje detallado) ...
+        winnerText.textContent = mensajeDetallado;
+        // ... (configurar texto del botón, mostrar anuncio, confeti) ...
+        database.ref('game/winner').set({
+            player: "otrojugador",
+            message: mensajeDetallado,
+            ronda: tipoRonda,
+            patron: patron,
+            timestamp: Date.now()
+        });
+    }
 
 function verificarPatronesPrimeraRonda() {
     // Lógica para verificar líneas horizontales
@@ -1169,92 +1199,61 @@ function verificarPatronesPrimeraRonda() {
 // Modificar también para la segunda ronda (cartón lleno)
 // Función para mostrar el anuncio de ganador
 function showWinner(message, tipoRonda, patron) {
-    let mensajeDetallado = message;
-    
-    // Añadir detalles del patrón si está disponible
-    if (patron) {
-        if (patron.includes('horizontal')) {
-            const fila = parseInt(patron.split('-')[1]) + 1;
-            mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
-        } else if (patron.includes('vertical')) {
-            const columna = parseInt(patron.split('-')[1]) + 1;
-            mensajeDetallado = `¡Línea vertical ${columna} completa!`;
-        } else if (patron.includes('diagonal-principal')) {
-            mensajeDetallado = "¡Diagonal principal completa!";
-        } else if (patron.includes('diagonal-secundaria')) {
-            mensajeDetallado = "¡Diagonal secundaria completa!";
-        } else if (patron.includes('cuatro-esquinas')) {
-            mensajeDetallado = "¡Cuatro esquinas completas!";
-        } else if (patron.includes('cuadrado')) {
-            const partes = patron.split('-');
-            const fila = parseInt(partes[1]) + 1;
-            const columna = parseInt(partes[2]) + 1;
-            mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
-        } else if (patron === 'carton-lleno') { // Añadir esta condición para el cartón lleno
-            mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
-        }
-    }
-
-    winnerText.textContent = mensajeDetallado;
-    
-    // Configurar el texto del botón según la ronda
-    if (tipoRonda === 'primera') {
-        continueBtn.textContent = 'Continuar a la carta llena';
-    } else {
-        continueBtn.textContent = 'Nuevo Juego';
-    }
-    
-    winnerAnnouncement.style.display = 'block';
-    
-    // Disparar confeti
-    confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
-    });
-    
-    // Guardar en Firebase que hay un ganador con detalles del patrón
-    database.ref('game/winner').set({
-        player: "otrojugador", // Asegúrate de que el jugador sea "otrojugador"
-        message: mensajeDetallado,
-        ronda: tipoRonda,
-        patron: patron,
-        timestamp: Date.now()
-    });
-
-    // Este listener interno no es necesario y puede causar bucles o comportamientos inesperados.
-    // La lógica para manejar el ganador ya está en initDatabase() y checkForWinner().
-    // Se recomienda eliminarlo.
-    /*
-    database.ref('game/winner').on('value', function(snapshot) {
-        if (snapshot.exists()) {
-            const winnerData = snapshot.val();
-            
-            let mensajeGanador = "";
-            if (winnerData.player === "otrojugador") {
-                mensajeGanador = `¡${winnerData.player} ha ganado!`;
-            } else if (winnerData.player === "cantor") {
-                mensajeGanador = "¡Felicidades! ¡Has ganado!";
-            } else {
-                mensajeGanador = winnerData.message || "¡Alguien ha ganado!";
-            }
-            
-            // Añadir detalles del patrón si están disponibles
-            if (winnerData.patron) {
-                // Lógica para mostrar el tipo de patrón ganador
-            }
-            
-            // Si otro jugador ganó, pausar el juego
-            if (winnerData.player && winnerData.player !== 'otrojugador') {
-                pauseGame();
-                winnerText.textContent = mensajeGanador;
-                winnerAnnouncement.style.display = 'block';
+        let mensajeDetallado = message;
+        // Añadir detalles del patrón si está disponible
+        if (patron) {
+            if (patron.includes('horizontal')) {
+                const fila = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
+            } else if (patron.includes('vertical')) {
+                const columna = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea vertical ${columna} completa!`;
+            } else if (patron.includes('diagonal-principal')) {
+                mensajeDetallado = "¡Diagonal principal completa!";
+            } else if (patron.includes('diagonal-secundaria')) {
+                mensajeDetallado = "¡Diagonal secundaria completa!";
+            } else if (patron.includes('cuatro-esquinas')) {
+                mensajeDetallado = "¡Cuatro esquinas completas!";
+            } else if (patron.includes('cuadrado')) {
+                const partes = patron.split('-');
+                const fila = parseInt(partes[1]) + 1;
+                const columna = parseInt(partes[2]) + 1;
+                mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+            } else if (patron === 'carton-lleno') {
+                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
             }
         }
-    });
-    */
-}
+
+        winnerText.textContent = mensajeDetallado;
+
+        // Configurar el texto del botón según la ronda
+        // El botón del jugador solo debe "aceptar" el anuncio, no controlar el juego.
+        if (tipoRonda === 'primera') {
+            continueBtn.textContent = 'Aceptar y esperar al cantor';
+        } else {
+            continueBtn.textContent = 'Aceptar y esperar al cantor';
+        }
+
+        winnerAnnouncement.style.display = 'block';
+
+        // Disparar confeti
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+        });
+
+        // Guardar en Firebase que hay un ganador con detalles del patrón
+        // Se asegura que el jugador sea "otrojugador"
+        database.ref('game/winner').set({
+            player: "otrojugador", // Asegúrate de que el jugador sea "otrojugador"
+            message: mensajeDetallado,
+            ronda: tipoRonda,
+            patron: patron,
+            timestamp: Date.now()
+        });
+    }
 
     function verificarPatronesPrimeraRonda() {
     // Lógica para verificar líneas horizontales
