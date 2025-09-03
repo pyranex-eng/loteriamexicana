@@ -1079,7 +1079,31 @@
             stopBtn.addEventListener('click', detenerDesfileCartas);
             distributeBtn.addEventListener('click', distribuirMesas);
             resetGameBtn.addEventListener('click', reiniciarJuego);
-            newGameBtn.addEventListener('click', reiniciarJuego);
+            newGameBtn.addEventListener('click', function() {
+    if (rondaActual === 'segunda') { // Si estamos en la segunda ronda y se presiona "Nuevo Juego"
+        // Esto significa que el juego ha terminado y se quiere empezar uno nuevo
+        // Aquí se puede añadir una confirmación si se desea antes de un reinicio completo
+        if (confirm("¿Estás seguro de que quieres iniciar un nuevo juego? Esto reiniciará las cartas y limpiará los tableros.")) {
+            // Reinicio completo: barajear cartas y limpiar fichas
+            barajearCartas(); // Esto reinicia las cartas disponibles y sacadas
+            limpiarFichas(); // Esto limpia las marcas del tablero del cantor y lo guarda en Firebase
+            rondaActual = 'primera'; // Resetear la ronda
+            database.ref('game/ronda').set('primera'); // Resetear la ronda en Firebase
+            database.ref('game/winner').remove(); // Limpiar el ganador en Firebase
+            database.ref('game/paused').set(false); // Despausar el juego en Firebase
+            statusText.textContent = 'Preparando juego...';
+            newGameBtn.textContent = 'Continuar la carta llena'; // Restaurar texto inicial del botón
+            gamePaused = false; // Despausar el juego localmente
+            slideBtn.disabled = false; // Habilitar controles
+            randomBtn.disabled = false;
+            cartaSelector.disabled = false;
+        }
+    } else {
+        // Si no estamos en la segunda ronda (es decir, estamos en la primera y se ganó),
+        // la función reiniciarJuego() ya maneja el paso a la segunda ronda.
+        reiniciarJuego();
+    }
+});
 
             // Seguir el movimiento del mouse para el efecto de spotlight
             document.addEventListener('mousemove', function(e) {
@@ -1240,7 +1264,7 @@ function checkForWinner() {
     } else if (rondaActual === 'segunda') {
         // Verificar cartón lleno para la segunda ronda
         if (verificarCartonLleno()) {
-            showWinner("¡Cartón lleno! ¡Lotería!", 'segunda');
+            showWinner("¡Cartón lleno! ¡Lotería!!", 'segunda');
             pauseGame();
             return;
         }
@@ -1317,7 +1341,7 @@ function verificarCartonLleno() {
             return false;
         }
     }
-    showWinner("¡Cartón lleno! ¡Lotería!", 'segunda', 'carton-lleno');
+    showWinner("¡Cartón lleno! ¡Lotería!1", 'segunda', 'carton-lleno');
     return true;
 }
 
@@ -1344,7 +1368,7 @@ function verificarCartonLleno() {
                 const columna = parseInt(partes[2]) + 1;
                 mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
             } else if (patron === 'carton-lleno') {
-                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
+                mensajeDetallado = "¡Cartón lleno! ¡Lotería!4";
             }
         }
 
@@ -1609,56 +1633,60 @@ function verificarCartonLleno() {
         }
 
         // Inicializar la base de datos de Firebase
-        function initDatabase() {
-            // Referencia a la conexión
-            const connectedRef = database.ref(".info/connected");
+function initDatabase() {
+    const connectedRef = database.ref(".info/connected");
+    
+    connectedRef.on("value", function(snap) {
+        if (snap.val() === true) {
+            isConnected = true;
+            firebaseStatus.className = 'firebase-status status-connected';
+            firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Conectado a Firebase</span>';
+            statusText.textContent = 'Conectado';
             
-            connectedRef.on("value", function(snap) {
-                if (snap.val() === true) {
-                    isConnected = true;
-                    firebaseStatus.className = 'firebase-status status-connected';
-                    firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Conectado a Firebase</span>';
-                    statusText.textContent = 'Conectado';
-                    
-                    // Cargar el estado del juego si existe
-                    loadGameState();
+            // Cargar el estado del juego si existe
+            loadGameState();
+        } else {
+            isConnected = false;
+            firebaseStatus.className = 'firebase-status status-disconnected';
+            firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Desconectado de Firebase</span>';
+            statusText.textContent = 'Desconectado';
+        }
+    });
+    
+    // Escuchar cambios en el estado del juego
+    database.ref('game').on('value', function(snapshot) {
+        if (snapshot.exists()) {
+            const gameData = snapshot.val();
+            
+            // Actualizar contador de jugadores
+            if (gameData.players) {
+                // Contar solo jugadores conectados (excluyendo al cantor si es necesario)
+                let currentPlayersConnected = 0;
+                for (const key in gameData.players) {
+                    if (gameData.players[key].connected && key !== 'cantor') { // Excluir al cantor de este conteo
+                        currentPlayersConnected++;
+                    }
+                }
+                playersConnected = currentPlayersConnected;
+                playersCount.textContent = playersConnected;
+                
+                if (playersConnected > 0) { // Si hay al menos un jugador conectado (aparte del cantor)
+                    playersStatus.className = 'connection-dot dot-connected';
                 } else {
-                    isConnected = false;
-                    firebaseStatus.className = 'firebase-status status-disconnected';
-                    firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Desconectado de Firebase</span>';
-                    statusText.textContent = 'Desconectado';
+                    playersStatus.className = 'connection-dot dot-disconnected';
                 }
-            });
+            }
             
-            // Escuchar cambios en el estado del juego
-            database.ref('game').on('value', function(snapshot) {
-                if (snapshot.exists()) {
-                    const gameData = snapshot.val();
-                    
-                    // Actualizar contador de jugadores
-                    if (gameData.players) {
-                        playersConnected = Object.keys(gameData.players).length;
-                        playersCount.textContent = playersConnected;
-                        
-                        if (playersConnected > 1) {
-                            playersStatus.className = 'connection-dot dot-connected';
-                        } else {
-                            playersStatus.className = 'connection-dot dot-disconnected';
-                        }
-                    }
-                    
-                    // Verificar si hay un ganador
-                    if (gameData.winner) {
-                        winnerText.textContent = gameData.winner.message;
-                        winnerAnnouncement.style.display = 'block';
-                    }
-                }
-            });
+            // Verificar si hay un ganador (este listener se reemplaza abajo)
+            // if (gameData.winner) {
+            //     winnerText.textContent = gameData.winner.message;
+            //     winnerAnnouncement.style.display = 'block';
+            // }
+        }
+    });
 
-            // Agregar este código en la función initDatabase() después de escuchar cambios en 'game'
-// Reemplazar el listener completo con este:
-            // Agregar este código en la función initDatabase() después de escuchar cambios en 'game'
-database.ref('game/winner').on('value', function(snapshot) {
+    // Reemplazar el listener completo con este:
+    database.ref('game/winner').on('value', function(snapshot) {
         if (snapshot.exists()) {
             const winnerData = snapshot.val();
 
@@ -1668,8 +1696,9 @@ database.ref('game/winner').on('value', function(snapshot) {
                 mensajeGanador = "¡Felicidades! ¡Has ganado!";
             } else {
                 // Si el ganador no es el cantor, se asume que es otro jugador.
-                // Se puede expandir para mostrar el nombre específico del jugador si se implementan IDs únicas.
-                mensajeGanador = `¡${winnerData.player} ha ganado!`;
+                // Usar el 'name' guardado en winnerData o el ID si no hay nombre.
+                const winnerName = winnerData.name || winnerData.player;
+                mensajeGanador = `¡${winnerName} ha ganado!`;
             }
 
             // Añadir detalles del patrón si están disponibles
@@ -1697,44 +1726,43 @@ database.ref('game/winner').on('value', function(snapshot) {
             }
 
             // Pausar el juego para el cantor si hay un ganador (sea el mismo o un jugador)
-            pauseGame();
+            pauseGame(); // Esta función ya detiene el desfile y deshabilita controles
             winnerText.textContent = mensajeGanador;
             winnerAnnouncement.style.display = 'block';
 
             // Mostrar un mensaje en el tablero del cantor indicando quién ganó
-            showBoardMessage(`${winnerData.player} ha ganado! Juego pausado.`, "info");
+            showBoardMessage(`${winnerData.name || winnerData.player} ha ganado! Juego pausado.`, "info");
 
         } else {
             // Si no hay ganador (la propiedad 'winner' fue eliminada), ocultar el anuncio
             winnerAnnouncement.style.display = 'none';
             // Asegurarse de que el juego no esté pausado si no hay ganador
-            if (gamePaused && !winnerAnnouncement.style.display === 'block') {
-                gamePaused = false;
-                statusText.textContent = 'Juego en curso'; // O el estado anterior
-                slideBtn.disabled = false;
-                randomBtn.disabled = false;
-                cartaSelector.disabled = false;
-                if (isConnected) {
-                    database.ref('game/paused').set(false);
+            // Solo reactivar si el estado de pausa en Firebase también es falso
+            database.ref('game/paused').once('value').then(snap => {
+                if (gamePaused && !snap.val()) { // Si localmente está pausado pero Firebase dice que no
+                    gamePaused = false;
+                    statusText.textContent = 'Juego en curso'; // O el estado anterior
+                    slideBtn.disabled = false;
+                    randomBtn.disabled = false;
+                    cartaSelector.disabled = false;
                 }
-            }
+            });
         }
     });
-            
-            // Registrar este jugador como cantor
-            const playerRef = database.ref('game/players/cantor');
-            playerRef.set({
-                name: 'Cantor',
-                connected: true,
-                timestamp: Date.now()
-            });
-            
-            playerRef.onDisconnect().update({
-    connected: false,
-    disconnectedAt: firebase.database.ServerValue.TIMESTAMP
-});
-
-        }
+        
+    // Registrar este jugador como cantor
+    const playerRef = database.ref('game/players/cantor');
+    playerRef.set({
+        name: 'Cantor',
+        connected: true,
+        timestamp: Date.now()
+    });
+    
+    playerRef.onDisconnect().update({
+        connected: false,
+        disconnectedAt: firebase.database.ServerValue.TIMESTAMP
+    });
+}
 
         // Guardar el estado del juego en Firebase
         function saveGameState() {
@@ -1917,47 +1945,31 @@ function distribuirMesas() {
     showBoardMessage("Nueva mesa generada", "success");
 }
 
-        function reiniciarJuego() {
-    if (rondaActual === 'primera') {
-        // Continuar a la segunda ronda
-        rondaActual = 'segunda';
-        winnerAnnouncement.style.display = 'none';
-        gamePaused = false;
-        statusText.textContent = 'Segunda ronda: Carta llena';
-        
-        // Habilitar controles
-        slideBtn.disabled = false;
-        randomBtn.disabled = false;
-        cartaSelector.disabled = false;
-        
-        // No reiniciar las cartas, mantener el estado actual
-        database.ref('game/winner').remove();
-        database.ref('game/paused').set(false);
-        database.ref('game/ronda').set('segunda');
-        
-        showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
-    } else {
-        // Reinicio completo del juego
-        rondaActual = 'primera';
-        patronGanador = null;
-        winnerAnnouncement.style.display = 'none';
-        gamePaused = false;
-        
-        // Habilitar controles
-        slideBtn.disabled = false;
-        randomBtn.disabled = false;
-        cartaSelector.disabled = false;
-        
-        // Reiniciar completamente el juego
-        barajearCartas();
-        limpiarFichas();
-        database.ref('game/winner').remove();
-        database.ref('game/paused').set(false);
-        database.ref('game/ronda').set('primera');
-        
-        showBoardMessage("Juego reiniciado completamente", "success");
-    }
-}
+                function reiniciarJuego() {
+            if (rondaActual === 'primera') {
+                // Lógica para continuar a la segunda ronda
+                rondaActual = 'segunda';
+                winnerAnnouncement.style.display = 'none';
+                gamePaused = false;
+                statusText.textContent = 'Segunda ronda: Carta llena';
+
+                // Habilitar controles
+                slideBtn.disabled = false;
+                randomBtn.disabled = false;
+                cartaSelector.disabled = false;
+
+                // No reiniciar las cartas, mantener el estado actual
+                database.ref('game/winner').remove(); // Limpiar el ganador
+                database.ref('game/paused').set(false); // Despausar el juego
+                database.ref('game/ronda').set('segunda');
+
+                showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
+                newGameBtn.textContent = 'Nuevo Juego'; // Cambiar el texto del botón para la siguiente fase
+            } else {
+                // Lógica para reiniciar el juego completamente después de la segunda ronda
+                finalizarJuego(); // Llamar a la nueva función para finalizar el juego
+            }
+        }
     </script>
 </body>
 </html>

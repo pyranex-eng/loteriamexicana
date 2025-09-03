@@ -512,6 +512,65 @@
                 justify-content: center;
             }
         }
+
+        /* Estilos para el modal del nombre del jugador */
+.player-name-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001; /* Asegura que esté por encima de todo */
+}
+
+.player-name-content {
+    background-color: var(--color-bg-container);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    border: 2px solid var(--color-primary);
+}
+
+.player-name-content h3 {
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.player-name-content p {
+    color: var(--color-text-light);
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+}
+
+.player-name-content input[type="text"] {
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin-bottom: 25px;
+    border: 2px solid var(--color-secondary);
+    border-radius: 8px;
+    background-color: #333;
+    color: var(--color-text-light);
+    font-size: 1rem;
+    text-align: center;
+}
+
+.player-name-content input[type="text"]::placeholder {
+    color: #aaa;
+}
+
+.player-name-content .btn {
+    width: auto;
+    min-width: 180px;
+    padding: 12px 30px;
+}
     </style>
 </head>
 <body>
@@ -536,7 +595,17 @@
 
     <div class="winner-announcement" id="winnerAnnouncement">
         <h2 id="winnerText">¡Felicidades! ¡Has ganado! La Primera Ronda 1/2</h2>
-        <button class="btn" id="continueBtn">Continuar la carta llena</button>
+        <button class="btn" id="continueBtn">Continuar</button>
+    </div>
+
+    <!-- Modal para solicitar el nombre del jugador -->
+    <div id="playerNameModal" class="player-name-modal">
+        <div class="player-name-content">
+            <h3>¡Bienvenido a la Lotería Mexicana!</h3>
+            <p>Por favor, ingresa tu nombre o apodo para continuar:</p>
+            <input type="text" id="playerNameInput" placeholder="Tu nombre o apodo" maxlength="15">
+            <button class="btn" id="submitNameBtn">¡Comenzar a Jugar!</button>
+        </div>
     </div>
 
     <div class="loteria-container">
@@ -672,7 +741,9 @@
         let drawnCardsCount = 0;
         let gamePaused = false;
         let rondaActual = 'primera';
-        let patronGanador = null; 
+        let patronGanador = null;
+        let playerId = null; // Nuevo: ID único para este jugador
+        let playerName = 'Jugador'; // Nuevo: Nombre/apodo del jugador 
 
         // Referencias a elementos DOM
         const playerBoardElement = document.getElementById('playerBoard');
@@ -689,6 +760,11 @@
         const continueBtn = document.getElementById('continueBtn');
         const matrixOverlay = document.getElementById('matrixOverlay');
         const spotlight = document.getElementById('spotlight');
+        // Nuevas referencias para el modal del nombre
+        const playerNameModal = document.getElementById('playerNameModal');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const submitNameBtn = document.getElementById('submitNameBtn');
+        const playerTagElement = document.querySelector('.player-tag.otrojugador-tag'); // Para actualizar el apodo en la interfaz
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
@@ -699,31 +775,61 @@
         });
 
         // Inicializar la aplicación
-        function initApp() {
-            // Mostrar mensaje inicial
-            showBoardMessage("Esperando a que el cantor inicie el juego", "info");
-            
-            // Configurar el tablero vacío inicialmente
-            createEmptyBoard();
-        }
+function initApp() {
+    // Mostrar el modal del nombre al inicio
+    playerNameModal.style.display = 'flex';
+    playerNameInput.focus(); // Poner el foco en el input
+    
+    // Configurar el tablero vacío inicialmente
+    createEmptyBoard();
+}
 
         // Configurar event listeners
-        function setupEventListeners() {
-            requestBoardBtn.addEventListener('click', requestBoard);
-            clearBoardBtn.addEventListener('click', clearBoard);
-                        continueBtn.addEventListener('click', function() {
-                winnerAnnouncement.style.display = 'none';
-                // El jugador solo espera a que el cantor reinicie o continúe el juego.
-                statusText.textContent = 'Esperando a que el cantor continúe...';
-            });
-
-            // Seguir el movimiento del mouse para el efecto de spotlight
-            document.addEventListener('mousemove', function(e) {
-                const x = e.clientX;
-                const y = e.clientY;
-                spotlight.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(200, 16, 46, 0.2) 0%, transparent 40%)`;
-            });
+function setupEventListeners() {
+    requestBoardBtn.addEventListener('click', requestBoard);
+    clearBoardBtn.addEventListener('click', clearBoard);
+    continueBtn.addEventListener('click', function() {
+        winnerAnnouncement.style.display = 'none';
+        // El jugador solo espera a que el cantor continue
+        if (rondaActual === 'primera') {
+            statusText.textContent = 'Esperando a que el cantor continue...';
         }
+    });
+
+    // Event listeners para el modal del nombre
+    submitNameBtn.addEventListener('click', submitPlayerName);
+    playerNameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            submitPlayerName();
+        }
+    });
+
+    // Seguir el movimiento del mouse para el efecto de spotlight
+    document.addEventListener('mousemove', function(e) {
+        const x = e.clientX;
+        const y = e.clientY;
+        spotlight.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(200, 16, 46, 0.2) 0%, transparent 40%)`;
+    });
+}
+
+// Función para enviar el nombre del jugador
+function submitPlayerName() {
+    const inputName = playerNameInput.value.trim();
+    if (inputName) {
+        playerName = inputName;
+        playerTagElement.textContent = `${playerName} (Tú)`; // Actualiza el apodo en la interfaz
+        playerNameModal.style.display = 'none'; // Oculta el modal
+        
+        // Generar un ID único para el jugador (ej. usando timestamp)
+        playerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        
+        // Ahora que tenemos el nombre y el ID, podemos registrar al jugador
+        registerPlayer();
+        showBoardMessage(`¡Bienvenido, ${playerName}! Esperando al cantor...`, "info");
+    } else {
+        alert("Por favor, ingresa un nombre o apodo para jugar.");
+    }
+}
 
         // Inicializar partículas de fondo
         function initParticles() {
@@ -762,6 +868,7 @@
                 retina_detect: true
             });
         }
+
 
         // Crear un tablero vacío
         function createEmptyBoard() {
@@ -825,32 +932,32 @@ function requestBoard() {
         }
 
         // Inicializar la base de datos de Firebase
-        function initDatabase() {
-            // Referencia a la conexión
-            const connectedRef = database.ref(".info/connected");
+function initDatabase() {
+    const connectedRef = database.ref(".info/connected");
+    
+    connectedRef.on("value", function(snap) {
+        if (snap.val() === true) {
+            isConnected = true;
+            firebaseStatus.className = 'firebase-status status-connected';
+            firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Conectado a Firebase</span>';
+            statusText.textContent = 'Conectado';
             
-            connectedRef.on("value", function(snap) {
-                if (snap.val() === true) {
-                    isConnected = true;
-                    firebaseStatus.className = 'firebase-status status-connected';
-                    firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Conectado a Firebase</span>';
-                    statusText.textContent = 'Conectado';
-                    
-                    // Registrar este jugador
-                    registerPlayer();
-                    
-                    // Cargar el estado del juego si existe
-                    loadGameState();
-                } else {
-                    isConnected = false;
-                    firebaseStatus.className = 'firebase-status status-disconnected';
-                    firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Desconectado de Firebase</span>';
-                    statusText.textContent = 'Desconectado';
-                }
-            });
+            // Si ya tenemos un ID de jugador, registrarlo. Si no, se hará al enviar el nombre.
+            if (playerId) {
+                registerPlayer();
+            }
             
-            // Escuchar cambios en el estado del juego
-            database.ref('game').on('value', function(snapshot) {
+            loadGameState();
+        } else {
+            isConnected = false;
+            firebaseStatus.className = 'firebase-status status-disconnected';
+            firebaseStatus.innerHTML = '<i class="fas fa-plug status-icon"></i><span>Desconectado de Firebase</span>';
+            statusText.textContent = 'Desconectado';
+        }
+    });
+    
+    // Escuchar cambios en el estado del juego
+    database.ref('game').on('value', function(snapshot) {
         if (snapshot.exists()) {
             const gameData = snapshot.val();
 
@@ -868,62 +975,63 @@ function requestBoard() {
             if (gameData.paused !== undefined) {
                 gamePaused = gameData.paused;
                 if (gamePaused) {
-                    statusText.textContent = 'Juego pausado - Esperando reinicio';
+                    statusText.textContent = 'Juego pausado - Esperando al Cantor';
+                    winnerAnnouncement.style.display = 'block';
                 } else {
-                    // Si el juego no está pausado y el cantor está conectado, el juego está en curso
                     if (callerConnected) {
                         statusText.textContent = 'Juego en curso';
                     } else {
-                        statusText.textContent = 'Esperando al cantor';
+                        statusText.textContent = 'Esperando al Cantor';
                     }
+                    winnerAnnouncement.style.display = 'none';
                 }
             }
                     
-                    // Verificar si el cantor está conectado
-                    if (gameData.players && gameData.players.cantor) {
-                        callerConnected = true;
-                        callerStatus.className = 'connection-dot dot-connected';
-                        statusText.textContent = 'Juego en curso';
-                    } else {
-                        callerConnected = false;
-                        callerStatus.className = 'connection-dot dot-disconnected';
-                        statusText.textContent = 'Esperando al cantor';
-                    }
-                    
-                    // Actualizar contador de cartas
-                    if (gameData.drawnCards) {
-                        drawnCardsCount = gameData.drawnCards.length;
-                        cardsCount.textContent = drawnCardsCount;
-                    }
-                    
-                    // Cargar la última carta cantada
-                    if (gameData.lastCard) {
-                        updateCurrentCard(gameData.lastCard);
-                    }
-                                        
-                    // Cargar estado del tablero
-                    if (gameData.players && gameData.players.otrojugador) {
-                        loadBoardState(gameData.players.otrojugador.board);
-                    }
-                    
-                    // Verificar si hay un ganador
-                    // Manejar el anuncio de ganador
-                        // Manejar el anuncio de ganador
+            // Verificar si el cantor está conectado
+            if (gameData.players && gameData.players.cantor && gameData.players.cantor.connected) {
+                callerConnected = true;
+                callerStatus.className = 'connection-dot dot-connected';
+                if (!gamePaused) { // Solo si el juego no está pausado por un ganador
+                    statusText.textContent = 'Juego en curso';
+                }
+            } else {
+                callerConnected = false;
+                callerStatus.className = 'connection-dot dot-disconnected';
+                statusText.textContent = 'Esperando al cantor';
+            }
+            
+            // Actualizar contador de cartas
+            if (gameData.drawnCards) {
+                drawnCardsCount = gameData.drawnCards.length;
+                cardsCount.textContent = drawnCardsCount;
+            }
+            
+            // Cargar la última carta cantada
+            if (gameData.lastCard) {
+                updateCurrentCard(gameData.lastCard);
+            }
+                                
+            // Cargar estado del tablero de ESTE jugador (usando playerId)
+            if (playerId && gameData.players && gameData.players[playerId] && gameData.players[playerId].board) {
+                loadBoardState(gameData.players[playerId].board);
+            }
+            
+            // Manejar el anuncio de ganador
             if (gameData.winner) {
                 const winnerData = gameData.winner;
                 let mensajeGanador = "";
 
-                // Determina el mensaje basado en quién ganó
-                if (winnerData.player === "otrojugador") {
-                    mensajeGanador = "¡Felicidades! ¡Has ganado!";
+                if (winnerData.player === playerId) { // Si el ganador es ESTE jugador
+                    mensajeGanador = `¡Felicidades, ${playerName}! ¡Has ganado!`;
                 } else if (winnerData.player === "cantor") {
                     mensajeGanador = "¡El Cantor ha ganado!";
-                } else {
-                    // Para compatibilidad con versiones anteriores o futuros jugadores
-                    mensajeGanador = winnerData.message || "¡Alguien ha ganado!";
+                } else { // Otro jugador ha ganado
+                    // Intentar obtener el nombre del otro jugador si está disponible
+                    const otherPlayerName = gameData.players && gameData.players[winnerData.player] ? gameData.players[winnerData.player].name : "Otro Jugador";
+                    mensajeGanador = `¡${otherPlayerName} ha ganado!`;
                 }
 
-                // Añadir detalles del patrón si están disponibles
+                // Añadir detalles del patrón
                 if (winnerData.patron) {
                     if (winnerData.patron.includes('horizontal')) {
                         const fila = parseInt(winnerData.patron.split('-')[1]) + 1;
@@ -947,61 +1055,68 @@ function requestBoard() {
                     }
                 }
 
-                // Pausar el juego para el jugador si hay un ganador
                 pauseGame();
                 winnerText.textContent = mensajeGanador;
                 winnerAnnouncement.style.display = 'block';
 
             } else {
-                // Si no hay ganador (la propiedad 'winner' fue eliminada), ocultar el anuncio
                 winnerAnnouncement.style.display = 'none';
-                // Asegurarse de que el juego no esté pausado si no hay ganador
                 if (gamePaused && !winnerAnnouncement.style.display === 'block') {
                     gamePaused = false;
-                    statusText.textContent = 'Juego en curso'; // O el estado anterior
-                    // No hay controles que habilitar/deshabilitar en el jugador, solo el estado visual.
+                    if (callerConnected) { // Solo si el cantor está conectado, el juego está en curso
+                        statusText.textContent = 'Juego en curso';
+                    } else {
+                        statusText.textContent = 'Esperando al Cantor';
+                    }
                 }
             }
         }
     });
-        }
+}
 
         // Registrar este jugador en Firebase
-        function registerPlayer() {
-            const playerRef = database.ref('game/players/otrojugador');
-            playerRef.set({
-                name: 'Otro Jugador',
-                connected: true,
-                timestamp: Date.now(),
-                board: playerBoard.map(card => ({
-                    numero: card.carta ? card.carta.numero : null,
-                    marcado: card.marcado
-                }))
-            });
-            
-            playerRef.onDisconnect().update({
-                connected: false
-            });
-        }
+function registerPlayer() {
+    if (!playerId) { // Asegurarse de que playerId ya fue generado
+        console.error("Error: playerId no está definido. No se puede registrar el jugador.");
+        return;
+    }
+    const playerRef = database.ref(`game/players/${playerId}`); // Usar playerId como clave
+    playerRef.set({
+        name: playerName, // Usar el nombre ingresado por el jugador
+        connected: true,
+        timestamp: Date.now(),
+        board: playerBoard.map(card => ({
+            numero: card.carta ? card.carta.numero : null,
+            marcado: card.marcado
+        }))
+    });
+    
+    playerRef.onDisconnect().update({
+        connected: false,
+        disconnectedAt: firebase.database.ServerValue.TIMESTAMP // Registrar tiempo de desconexión
+    });
+}
 
         // Cargar el estado del juego desde Firebase
-        function loadGameState() {
-            database.ref('game').once('value').then(function(snapshot) {
-                if (snapshot.exists()) {
-                    const gameData = snapshot.val();
-                    
-                    // Cargar estado del tablero
-                    if (gameData.players && gameData.players.otrojugador && gameData.players.otrojugador.board) {
-                        loadBoardState(gameData.players.otrojugador.board);
-                    }
-                    
-                    // Cargar el tablero distribuido
-                    if (gameData.distributedBoard) {
-                        loadBoardFromFirebase(gameData.distributedBoard.board);
-                    }
-                }
-            });
+function loadGameState() {
+    database.ref('game').once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            const gameData = snapshot.val();
+            
+            // Cargar estado del tablero de ESTE jugador (usando playerId)
+            // Asegurarse de que playerId ya está definido antes de intentar cargar el tablero específico
+            if (playerId && gameData.players && gameData.players[playerId] && gameData.players[playerId].board) {
+                loadBoardState(gameData.players[playerId].board);
+            }
+            
+            // Si el cantor distribuyó un tablero general, cárgalo si no tienes uno específico
+            // Esto es útil si el jugador se conecta por primera vez y el cantor ya distribuyó
+            if (gameData.distributedBoard && (!playerId || !gameData.players[playerId] || !gameData.players[playerId].board)) {
+                loadBoardFromFirebase(gameData.distributedBoard.board);
+            }
         }
+    });
+}
 
         // Función para cargar el tablero desde datos locales (no desde Firebase)
 function loadBoardFromLocal(boardData) {
@@ -1105,11 +1220,11 @@ function loadBoardFromLocal(boardData) {
             saveBoardState();
         }
 
-                function pauseGame() {
-            gamePaused = true;
-            statusText.textContent = 'Juego pausado - Esperando reinicio';
-            // El jugador no controla el estado de pausa global, solo su propio estado local.
-            // El cantor es quien actualiza 'game/paused' en Firebase.
+            // Función para pausar el juego (localmente para el jugador)
+        function pauseGame() {
+        gamePaused = true;
+        statusText.textContent = 'Juego pausado - Esperando al Cantor'; // Mensaje claro para el jugador
+        // No hay controles que deshabilitar en el jugador, solo el estado visual.
         }
 
         // Verificar si hay un ganador
@@ -1124,69 +1239,68 @@ function loadBoardFromLocal(boardData) {
                 }
             } else if (rondaActual === 'segunda') {
                 if (verificarCartonLleno()) {
-                    showWinner("¡Cartón lleno! ¡Lotería!", 'segunda', 'carton-lleno');
+                    showWinner("¡Cartón lleno! ¡Lotería!!!!", 'segunda', 'carton-lleno');
                     pauseGame();
                     return;
                 }
             }
         }
 
-        function showWinner(message, tipoRonda, patron) {
-        let mensajeDetallado = message;
-        // Añadir detalles del patrón si está disponible
-        if (patron) {
-            if (patron.includes('horizontal')) {
-                const fila = parseInt(patron.split('-')[1]) + 1;
-                mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
-            } else if (patron.includes('vertical')) {
-                const columna = parseInt(patron.split('-')[1]) + 1;
-                mensajeDetallado = `¡Línea vertical ${columna} completa!`;
-            } else if (patron.includes('diagonal-principal')) {
-                mensajeDetallado = "¡Diagonal principal completa!";
-            } else if (patron.includes('diagonal-secundaria')) {
-                mensajeDetallado = "¡Diagonal secundaria completa!";
-            } else if (patron.includes('cuatro-esquinas')) {
-                mensajeDetallado = "¡Cuatro esquinas completas!";
-            } else if (patron.includes('cuadrado')) {
-                const partes = patron.split('-');
-                const fila = parseInt(partes[1]) + 1;
-                const columna = parseInt(partes[2]) + 1;
-                mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
-            } else if (patron === 'carton-lleno') {
-                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
-            }
+function showWinner(message, tipoRonda, patron) {
+    let mensajeDetallado = message;
+    if (patron) {
+        if (patron.includes('horizontal')) {
+            const fila = parseInt(patron.split('-')[1]) + 1;
+            mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
+        } else if (patron.includes('vertical')) {
+            const columna = parseInt(patron.split('-')[1]) + 1;
+            mensajeDetallado = `¡Línea vertical ${columna} completa!`;
+        } else if (patron === 'diagonal-principal') {
+            mensajeDetallado = "¡Diagonal principal completa!";
+        } else if (patron === 'diagonal-secundaria') {
+            mensajeDetallado = "¡Diagonal secundaria completa!";
+        } else if (patron === 'cuatro-esquinas') {
+            mensajeDetallado = "¡Cuatro esquinas completas!";
+        } else if (patron.includes('cuadrado')) {
+            const partes = patron.split('-');
+            const fila = parseInt(partes[1]) + 1;
+            const columna = parseInt(partes[2]) + 1;
+            mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+        } else if (patron === 'carton-lleno') {
+            mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
         }
-
-        winnerText.textContent = mensajeDetallado;
-
-        // Configurar el texto del botón según la ronda
-        // El botón del jugador solo debe "aceptar" el anuncio, no controlar el juego.
-        if (tipoRonda === 'primera') {
-            continueBtn.textContent = 'Aceptar y esperar al cantor';
-        } else {
-            continueBtn.textContent = 'Aceptar y esperar al cantor';
-        }
-
-        winnerAnnouncement.style.display = 'block';
-
-        // Disparar confeti
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
-        });
-
-        // Guardar en Firebase que hay un ganador con detalles del patrón
-        // Se asegura que el jugador sea "otrojugador"
-        database.ref('game/winner').set({
-            player: "otrojugador", // Asegúrate de que el jugador sea "otrojugador"
-            message: mensajeDetallado,
-            ronda: tipoRonda,
-            patron: patron,
-            timestamp: Date.now()
-        });
     }
+
+    winnerText.textContent = mensajeDetallado;
+
+    if (tipoRonda === 'primera') {
+        continueBtn.textContent = 'Aceptar y esperar al Cantor';
+    } else {
+        continueBtn.textContent = 'Nuevo Juego';
+    }
+
+    winnerAnnouncement.style.display = 'block';
+
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+    });
+
+    // Guardar en Firebase que hay un ganador con detalles del patrón
+    database.ref('game/winner').set({
+        player: playerId, // Ahora se envía el ID único del jugador
+        name: playerName, // También se envía el nombre del jugador
+        message: mensajeDetallado,
+        ronda: tipoRonda,
+        patron: patron,
+        timestamp: Date.now()
+    });
+
+    database.ref('game/paused').set(true);
+    pauseGame();
+}
 
         function verificarPatronesPrimeraRonda() {
             // Lógica para verificar líneas horizontales
@@ -1259,134 +1373,6 @@ function loadBoardFromLocal(boardData) {
             return true;
         }
 
-// Función para mostrar el anuncio de ganador
-function showWinner(message, tipoRonda, patron) {
-        let mensajeDetallado = message;
-        // Añadir detalles del patrón si está disponible
-        if (patron) {
-            if (patron.includes('horizontal')) {
-                const fila = parseInt(patron.split('-')[1]) + 1;
-                mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
-            } else if (patron.includes('vertical')) {
-                const columna = parseInt(patron.split('-')[1]) + 1;
-                mensajeDetallado = `¡Línea vertical ${columna} completa!`;
-            } else if (patron.includes('diagonal-principal')) {
-                mensajeDetallado = "¡Diagonal principal completa!";
-            } else if (patron.includes('diagonal-secundaria')) {
-                mensajeDetallado = "¡Diagonal secundaria completa!";
-            } else if (patron.includes('cuatro-esquinas')) {
-                mensajeDetallado = "¡Cuatro esquinas completas!";
-            } else if (patron.includes('cuadrado')) {
-                const partes = patron.split('-');
-                const fila = parseInt(partes[1]) + 1;
-                const columna = parseInt(partes[2]) + 1;
-                mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
-            } else if (patron === 'carton-lleno') {
-                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
-            }
-        }
-
-        winnerText.textContent = mensajeDetallado;
-
-        // Configurar el texto del botón según la ronda
-        // El botón del jugador solo debe "aceptar" el anuncio, no controlar el juego.
-        if (tipoRonda === 'primera') {
-            continueBtn.textContent = 'Aceptar y esperar al cantor';
-        } else {
-            continueBtn.textContent = 'Aceptar y esperar al cantor';
-        }
-
-        winnerAnnouncement.style.display = 'block';
-
-        // Disparar confeti
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
-        });
-
-        // Guardar en Firebase que hay un ganador con detalles del patrón
-        // Se asegura que el jugador sea "otrojugador"
-        database.ref('game/winner').set({
-            player: "otrojugador", // Asegúrate de que el jugador sea "otrojugador"
-            message: mensajeDetallado,
-            ronda: tipoRonda,
-            patron: patron,
-            timestamp: Date.now()
-        });
-    }
-
-    function verificarPatronesPrimeraRonda() {
-    // Lógica para verificar líneas horizontales
-    for (let i = 0; i < 4; i++) {
-        if (playerBoard[i*4].marcado && playerBoard[i*4+1].marcado && 
-            playerBoard[i*4+2].marcado && playerBoard[i*4+3].marcado) {
-            patronGanador = `horizontal-${i}`;
-            showWinner("¡Línea horizontal completa!", 'primera');
-            return true;
-        }
-    }
-    
-    // Lógica para verificar líneas verticales
-    for (let i = 0; i < 4; i++) {
-        if (playerBoard[i].marcado && playerBoard[i+4].marcado && 
-            playerBoard[i+8].marcado && playerBoard[i+12].marcado) {
-            patronGanador = `vertical-${i}`;
-            showWinner("¡Línea vertical completa!", 'primera');
-            return true;
-        }
-    }
-    
-    // Lógica para verificar diagonal principal
-    if (playerBoard[0].marcado && playerBoard[5].marcado && 
-        playerBoard[10].marcado && playerBoard[15].marcado) {
-        patronGanador = 'diagonal-principal';
-        showWinner("¡Diagonal completa!", 'primera');
-        return true;
-    }
-    
-    // Lógica para verificar diagonal secundaria
-    if (playerBoard[3].marcado && playerBoard[6].marcado && 
-        playerBoard[9].marcado && playerBoard[12].marcado) {
-        patronGanador = 'diagonal-secundaria';
-        showWinner("¡Diagonal completa!", 'primera');
-        return true;
-    }
-
-    // Lógica para verificar cuatro esquinas
-    if (playerBoard[0].marcado && playerBoard[3].marcado && 
-        playerBoard[12].marcado && playerBoard[15].marcado) {
-        patronGanador = 'cuatro-esquinas';
-        showWinner("¡Cuatro esquinas completas!", 'primera');
-        return true;
-    }
-    
-    // Lógica para verificar cuadrados (2x2)
-    for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 3; col++) {
-            const index = row * 4 + col;
-            if (playerBoard[index].marcado && playerBoard[index+1].marcado && 
-                playerBoard[index+4].marcado && playerBoard[index+5].marcado) {
-                patronGanador = `cuadrado-${row}-${col}`;
-                showWinner("¡Cuadrado completo!", 'primera');
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
-
-function verificarCartonLleno() {
-    // Verificar si todas las cartas están marcadas
-    for (let i = 0; i < playerBoard.length; i++) {
-        if (!playerBoard[i].marcado) {
-            return false;
-        }
-    }
-    return true;
-}
 
         // Anunciar ganador
         function announceWinner(message, ronda) {
@@ -1442,16 +1428,16 @@ function verificarCartonLleno() {
         }
 
         // Guardar el estado del tablero en Firebase
-        function saveBoardState() {
-            if (!isConnected) return;
-            
-            const boardData = playerBoard.map(card => ({
-                numero: card.carta ? card.carta.numero : null,
-                marcado: card.marcado
-            }));
-            
-            database.ref('game/players/otrojugador/board').set(boardData);
-        }
+function saveBoardState() {
+    if (!isConnected || !playerId) return; // Asegurarse de que playerId existe
+    
+    const boardData = playerBoard.map(card => ({
+        numero: card.carta ? card.carta.numero : null,
+        marcado: card.marcado
+    }));
+    
+    database.ref(`game/players/${playerId}/board`).set(boardData); // Guardar bajo el ID del jugador
+}
 
         // Mostrar un mensaje en el tablero
         function showBoardMessage(message, type) {
