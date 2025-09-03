@@ -969,14 +969,18 @@ function initDatabase() {
         }
 
             // Actualizar estado de la ronda
-            if (gameData.ronda) {
-                rondaActual = gameData.ronda;
-                if (rondaActual === 'segunda') {
-                    statusText.textContent = 'Segunda ronda: Carta llena';
-                } else {
-                    statusText.textContent = 'Primera ronda';
-                }
-            }
+if (gameData.ronda) {
+    rondaActual = gameData.ronda;
+    if (rondaActual === 'segunda') {
+        statusText.textContent = 'Segunda ronda: Carta llena';
+    } else if (rondaActual === 'finalizado') {
+        statusText.textContent = 'Juego finalizado por el cantor';
+        gamePaused = true;
+        // Aquí podrías añadir lógica para marcar cartas sobrantes también
+    } else {
+        statusText.textContent = 'Primera ronda';
+    }
+}
 
             // Manejar el estado de pausa del juego
             if (gameData.paused !== undefined) {

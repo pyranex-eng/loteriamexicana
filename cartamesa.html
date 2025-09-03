@@ -1450,6 +1450,12 @@ function verificarCartonLleno() {
         }
 
         function barajearCartas() {
+
+            // No permitir barajear si el juego está finalizado
+    if (rondaActual === 'finalizado') {
+        showBoardMessage("El juego ha finalizado. No se pueden barajear más cartas.", "error");
+        return;
+    }
     // Mostrar animación de barajeo
     matrixOverlay.style.opacity = '1';
     matrixOverlay.style.pointerEvents = 'all';
@@ -1987,23 +1993,46 @@ function reiniciarJuego() {
         showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
         newGameBtn.textContent = 'Nuevo Juego'; // Cambiar el texto del botón para la siguiente fase
     } else {
-        // Lógica para reiniciar el juego completamente después de la segunda ronda
-        // NO mostrar confirmación y NO limpiar las fichas
-        barajearCartas(); // Esto reinicia las cartas disponibles y sacadas
-        rondaActual = 'primera'; // Resetear la ronda
-        database.ref('game/ronda').set('primera'); // Resetear la ronda en Firebase
-        database.ref('game/winner').remove(); // Limpiar el ganador en Firebase
-        database.ref('game/paused').set(false); // Despausar el juego en Firebase
-        statusText.textContent = 'Juego reiniciado';
-        newGameBtn.textContent = 'Continuar la carta llena'; // Restaurar texto inicial del botón
-        gamePaused = true; // Despausar el juego localmente
-        slideBtn.disabled = false; // Habilitar controles
-        randomBtn.disabled = false;
-        cartaSelector.disabled = false;
+        // DESPUÉS DE LA SEGUNDA RONDA: NO barajear cartas, solo cambiar estado
+        rondaActual = 'finalizado'; // Nuevo estado para indicar que el juego terminó
+        database.ref('game/ronda').set('finalizado');
+        database.ref('game/winner').remove();
+        database.ref('game/paused').set(true); // Pausar el juego definitivamente
         
-        // NO limpiar las fichas del tablero - mantenerlas como están
-        showBoardMessage("Juego reiniciado - Cartas barajeadas", "success");
+        statusText.textContent = 'Juego finalizado - Cartón lleno completado';
+        newGameBtn.textContent = 'Nuevo Juego';
+        gamePaused = true;
+        
+        // Marcar cartas sobrantes en rojo
+        marcarCartasSobrantes();
+        
+        showBoardMessage("¡Juego completado! Las cartas sobrantes se muestran en rojo", "success");
     }
+}
+
+function marcarCartasSobrantes() {
+    // Obtener todos los elementos de cartas en la lista
+    const cartasItems = document.querySelectorAll('.drawn-card-item');
+    
+    // Crear array de números de cartas que SÍ fueron sacadas
+    const numerosSacados = cartasSacadas.map(carta => carta.numero);
+    
+    // Recorrer todas las cartas posibles
+    cartasLoteria.forEach(carta => {
+        // Si la carta NO fue sacada, es sobrante
+        if (!numerosSacados.includes(carta.numero)) {
+            // Buscar el elemento en el selector y marcarlo como deshabilitado
+            const option = cartaSelector.querySelector(`option[value="${carta.numero}"]`);
+            if (option) {
+                option.disabled = true;
+                option.style.color = '#ff4444';
+                option.textContent += ' (Sobrante)';
+            }
+        }
+    });
+    
+    // También marcar visualmente en la lista si es necesario
+    // (Aquí podrías añadir lógica adicional si quieres resaltar de otra forma)
 }
     </script>
 </body>
