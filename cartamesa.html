@@ -6,737 +6,776 @@
     <title>Lotería Mexicana - Primer Jugador (Cantor)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --color-primary: #006847; /* Verde bandera */
-            --color-secondary: #ffde00; /* Dorado para contraste */
-            --color-text-light: #f0f0f0;
-            --color-text-dark: #333;
-            --color-bg-dark: #121212;
-            --color-bg-container: #1e1e1e;
-            --color-marcado: #c8102e; /* Rojo bandera para las marcas */
-            --color-otrojugador: #d40000; /* Color para el otro jugador */
-            --color-sobrante: #ff4444; /* Color para cartas sobrantes */
-            --color-auto-mark: #ff9800; /* Color para marcado automático */
-        }
+<style>
+:root {
+    --color-primary: #006847; /* Verde bandera */
+    --color-secondary: #ffde00; /* Dorado para contraste */
+    --color-text-light: #f0f0f0;
+    --color-text-dark: #333;
+    --color-bg-dark: #121212;
+    --color-bg-container: #1e1e1e;
+    --color-marcado: #c8102e; /* Rojo bandera para las marcas */
+    --color-otrojugador: #d40000; /* Color para el otro jugador */
+    --color-sobrante: #ff4444; /* Color para cartas sobrantes */
+    --color-auto-mark: #ff9800; /* Color para marcado automático */
+}
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--color-bg-dark);
-            color: var(--color-text-light);
-            padding: 0;
-            margin: 0;
-            overflow-x: hidden;
-            position: relative;
-            min-height: 100vh;
-        }
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-light);
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+}
 
-        #particles-js {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
+#particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
 
-        .floating-elements {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            overflow: hidden;
-        }
-        .floating-element {
-            position: absolute;
-            background-color: var(--color-primary);
-            opacity: 0.15;
-            border-radius: 50%;
-            filter: blur(50px);
-            animation: float 20s infinite ease-in-out;
-        }
-        .floating-element:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; animation-delay: 0s; }
-        .floating-element:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 10%; animation-delay: 5s; }
-        .floating-element:nth-child(3) { width: 100px; height: 100px; top: 40%; right: 25%; animation-delay: 10s; }
-        .floating-element:nth-child(4) { width: 250px; height: 250px; bottom: 5%; left: 30%; animation-delay: 15s; }
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg) scale(1); }
-            50% { transform: translateY(-30px) rotate(180deg) scale(1.1); }
-            100% { transform: translateY(0) rotate(360deg) scale(1); }
-        }
+.floating-elements {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+.floating-element {
+    position: absolute;
+    background-color: var(--color-primary);
+    opacity: 0.15;
+    border-radius: 50%;
+    filter: blur(50px);
+    animation: float 20s infinite ease-in-out;
+}
+.floating-element:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; animation-delay: 0s; }
+.floating-element:nth-child(2) { width: 200px; height: 200px; bottom: 15%; right: 10%; animation-delay: 5s; }
+.floating-element:nth-child(3) { width: 100px; height: 100px; top: 40%; right: 25%; animation-delay: 10s; }
+.floating-element:nth-child(4) { width: 250px; height: 250px; bottom: 5%; left: 30%; animation-delay: 15s; }
+@keyframes float {
+    0% { transform: translateY(0) rotate(0deg) scale(1); }
+    50% { transform: translateY(-30px) rotate(180deg) scale(1.1); }
+    100% { transform: translateY(0) rotate(360deg) scale(1); }
+}
 
-        .spotlight {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, rgba(0, 104, 71, 0.2) 0%, transparent 40%);
-            z-index: 2;
-            pointer-events: none;
-            transition: all 0.1s ease-out;
-        }
+.spotlight {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(0, 104, 71, 0.2) 0%, transparent 40%);
+    z-index: 2;
+    pointer-events: none;
+    transition: all 0.1s ease-out;
+}
 
-        .matrix-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 99;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: var(--color-primary);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 2rem;
-            text-align: center;
-        }
-        .matrix-overlay canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        .matrix-overlay h2 {
-            z-index: 100;
-        }
+.matrix-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: var(--color-primary);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 2rem;
+    text-align: center;
+}
+.matrix-overlay canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.matrix-overlay h2 {
+    z-index: 100;
+}
 
-        .loteria-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            background-color: var(--color-bg-container);
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(0, 104, 71, 0.3);
-            padding: 30px;
-            position: relative;
-            z-index: 10;
-            border: 2px solid var(--color-primary);
-            transition: all 0.5s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+.loteria-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    background-color: var(--color-bg-container);
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 104, 71, 0.3);
+    padding: 30px;
+    position: relative;
+    z-index: 10;
+    border: 2px solid var(--color-primary);
+    transition: all 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-        h1 {
-            text-align: center;
-            color: var(--color-primary);
-            margin-bottom: 20px;
-            font-size: 3rem;
-            text-shadow: 2px 2px 5px rgba(0, 104, 71, 0.5);
-            transition: all 0.5s ease;
-        }
+h1 {
+    text-align: center;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    font-size: 3rem;
+    text-shadow: 2px 2px 5px rgba(0, 104, 71, 0.5);
+    transition: all 0.5s ease;
+}
 
-        .main-content {
-            display: flex;
-            justify-content: space-around;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
+.main-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+}
 
-        .caller-section, .board-section {
-            flex: 1;
-            min-width: 300px;
-        }
+.caller-section, .board-section {
+    flex: 1;
+    min-width: 300px;
+}
 
-        .controls-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+.controls-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
 
-        .controls, .controls-secondary, .slide-controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            width: 100%;
-            max-width: 800px;
-        }
-        
-        .board-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            margin-top: 15px;
-        }
+.controls, .controls-secondary, .slide-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 600px;
+}
 
-        .controls-secondary {
-            justify-content: space-between;
-        }
+.board-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    margin-top: 15px;
+}
 
-        .btn {
-            padding: 12px 24px;
-            background: linear-gradient(45deg, var(--color-primary), #119565);
-            color: var(--color-bg-dark);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(0, 104, 71, 0.4);
-            position: relative;
-            overflow: hidden;
-            flex: 1 1 auto;
-            min-width: 150px;
-        }
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.4);
-            opacity: 0;
-            border-radius: 50%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0, 104, 71, 0.6);
-        }
-        .btn:hover::after {
-            animation: pulse 1s ease-out;
-        }
-        @keyframes pulse {
-            0% { transform: scale(0, 0); opacity: 0.5; }
-            100% { transform: scale(20, 20); opacity: 0; }
-        }
-        .btn:disabled {
-            background: #444;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.5;
-        }
+.controls-secondary {
+    justify-content: space-between;
+}
 
-        .carta-selector, .help-selector {
-            padding: 12px 18px;
-            border: 2px solid var(--color-primary);
-            border-radius: 8px;
-            font-size: 1rem;
-            width: 100%;
-            max-width: 300px;
-            background-color: var(--color-bg-container);
-            color: var(--color-text-light);
-            transition: all 0.3s;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23006847" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 30px;
-        }
+.btn {
+    padding: 12px 24px;
+    background: linear-gradient(45deg, var(--color-primary), #119565);
+    color: var(--color-bg-dark);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 104, 71, 0.4);
+    position: relative;
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-width: 150px;
+}
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    opacity: 0;
+    border-radius: 50%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 104, 71, 0.6);
+}
+.btn:hover::after {
+    animation: pulse 1s ease-out;
+}
+@keyframes pulse {
+    0% { transform: scale(0, 0); opacity: 0.5; }
+    100% { transform: scale(20, 20); opacity: 0; }
+}
+.btn:disabled {
+    background: #444;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.5;
+}
 
-        .slide-speed {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1rem;
-        }
-        .slide-speed input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 150px;
-            height: 8px;
-            background: #333;
-            outline: none;
-            opacity: 0.7;
-            transition: opacity .2s;
-            border-radius: 5px;
-        }
-        .slide-speed input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--color-primary);
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #fff;
-        }
-        .slide-speed input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: var(--color-primary);
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #fff;
-        }
+.carta-selector, .help-selector {
+    padding: 12px 20px;
+    border: 2px solid var(--color-primary);
+    border-radius: 8px;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+    background-color: var(--color-bg-container);
+    color: var(--color-text-light);
+    transition: all 0.3s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23006847" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
 
-        .auto-mark-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1rem;
-            margin-top: 10px;
-        }
-        .auto-mark-control input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 120px;
-            height: 8px;
-            background: #333;
-            outline: none;
-            opacity: 0.7;
-            transition: opacity .2s;
-            border-radius: 5px;
-        }
-        .auto-mark-control input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: var(--color-auto-mark);
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #fff;
-        }
-        .auto-mark-control input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            background: var(--color-auto-mark);
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #fff;
-        }
+.slide-speed {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+.slide-speed input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 150px;
+    height: 8px;
+    background: #333;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+    border-radius: 5px;
+}
+.slide-speed input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+.slide-speed input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
 
-        .carta-display {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 30px;
-            position: relative;
-            perspective: 1000px;
-        }
+.auto-mark-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+.auto-mark-control input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
+    height: 8px;
+    background: #333;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+    border-radius: 5px;
+}
+.auto-mark-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--color-auto-mark);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+.auto-mark-control input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--color-auto-mark);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
 
-        .carta {
-            width: 320px;
-            height: 420px;
-            border: 3px solid var(--color-primary);
-            border-radius: 15px;
-            background: var(--color-bg-container);
-            box-shadow: 0 10px 25px rgba(0, 104, 71, 0.25);
-            margin-bottom: 25px;
-            transition: transform 0.6s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            transform-style: preserve-3d;
+.carta-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    position: relative;
+    perspective: 1000px;
+}
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.carta {
+    width: 280px;
+    height: 370px;
+    border: 3px solid var(--color-primary);
+    border-radius: 15px;
+    background: var(--color-bg-container);
+    box-shadow: 0 10px 25px rgba(0, 104, 71, 0.25);
+    margin-bottom: 25px;
+    transition: transform 0.6s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
 
-        .carta-imagen {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            z-index: 1;
-            transition: all 0.3s;
-            background-color: #0d0d0d;
-        }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .drawn-cards-list {
-            margin-top: 40px;
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            width: 100%;
-            max-width: 900px;
-            margin: 40px auto 0;
-            position: relative;
-        }
+.carta-imagen {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 1;
+    transition: all 0.3s;
+    background-color: #0d0d0d;
+}
 
-        .drawn-cards-list h3 {
-            color: var(--color-primary);
-            text-align: center;
-            margin-bottom: 15px;
-        }
+.drawn-cards-list {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 800px;
+    margin: 30px auto 0;
+    position: relative;
+    order: 3;
+}
 
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            border: 1px solid rgba(0, 104, 71, 0.5);
-            border-radius: 8px;
-        }
+.drawn-cards-list h3 {
+    color: var(--color-primary);
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
 
-        .cards-grid::-webkit-scrollbar {
-            width: 8px;
-        }
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    border: 1px solid rgba(0, 104, 71, 0.5);
+    border-radius: 8px;
+}
 
-        .cards-grid::-webkit-scrollbar-track {
-            background: #2b2b2b;
-            border-radius: 10px;
-        }
+.cards-grid::-webkit-scrollbar {
+    width: 8px;
+}
 
-        .cards-grid::-webkit-scrollbar-thumb {
-            background: var(--color-primary);
-            border-radius: 10px;
-            border: 2px solid #2b2b2b;
-        }
+.cards-grid::-webkit-scrollbar-track {
+    background: #2b2b2b;
+    border-radius: 10px;
+}
 
-        .drawn-card-item {
-            background-color: #2b2b2b;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid var(--color-primary);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+.cards-grid::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 10px;
+    border: 2px solid #2b2b2b;
+}
 
-        .drawn-card-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 104, 71, 0.2);
-        }
+.drawn-card-item {
+    background-color: #2b2b2b;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--color-primary);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        .drawn-card-item .card-number {
-            font-weight: bold;
-            color: var(--color-primary);
-            font-size: 1.1rem;
-        }
+.drawn-card-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 104, 71, 0.2);
+}
 
-        .drawn-card-item .card-name {
-            flex-grow: 1;
-            color: var(--color-text-light);
-            font-size: 1rem;
-        }
+.drawn-card-item .card-number {
+    font-weight: bold;
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
 
-        .board-container {
-            padding: 20px;
-            background-color: #2b2b2b;
-            border-radius: 15px;
-            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--color-secondary);
-            text-align: center;
-        }
+.drawn-card-item .card-name {
+    flex-grow: 1;
+    color: var(--color-text-light);
+    font-size: 1rem;
+}
 
-        .board-container h3 {
-            color: var(--color-secondary);
-            margin-bottom: 15px;
-        }
+.board-container {
+    padding: 20px;
+    background-color: #2b2b2b;
+    border-radius: 15px;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--color-secondary);
+    text-align: center;
+    height: fit-content;
+}
 
-        .board-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-gap: 5px;
-            padding: 10px;
-            background-color: #1a1a1a;
-            border-radius: 10px;
-            border: 1px solid #444;
-        }
+.board-container h3 {
+    color: var(--color-secondary);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
 
-        .board-card {
-            position: relative;
-            width: 100%;
-            padding-bottom: 133.33%;
-            background-size: cover;
-            background-position: center;
-            border: 2px solid #333;
-            border-radius: 5px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
+.board-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 8px;
+    padding: 15px;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    border: 1px solid #444;
+}
 
-        .board-card:hover {
-            transform: scale(1.03);
-            border-color: var(--color-primary);
-        }
+.board-card {
+    position: relative;
+    width: 100%;
+    padding-bottom: 133.33%;
+    background-size: contain; /* Cambiar 'cover' por 'contain' */
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 2px solid #333;
+    border-radius: 5px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
 
-        .board-card.marked {
-            border-color: var(--color-marcado);
-            box-shadow: 0 0 10px var(--color-marcado);
-        }
+.board-card:hover {
+    transform: scale(1.03);
+    border-color: var(--color-primary);
+}
 
-        .board-card.marked::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 80%;
-            height: 80%;
-            background-color: var(--color-marcado);
-            border-radius: 50%;
-            opacity: 0.7;
-            transform: translate(-50%, -50%) scale(0);
-            animation: markAnimation 0.3s forwards;
-        }
+.board-card.marked {
+    border-color: var(--color-marcado);
+    box-shadow: 0 0 10px var(--color-marcado);
+}
 
-        .board-card.auto-marked {
-            border-color: var(--color-auto-mark);
-            box-shadow: 0 0 10px var(--color-auto-mark);
-        }
+.board-card.marked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background-color: var(--color-marcado);
+    border-radius: 50%;
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0);
+    animation: markAnimation 0.3s forwards;
+}
 
-        .board-card.auto-marked::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 80%;
-            height: 80%;
-            background-color: var(--color-auto-mark);
-            border-radius: 50%;
-            opacity: 0.7;
-            transform: translate(-50%, -50%) scale(0);
-            animation: markAnimation 0.3s forwards;
-        }
+.board-card.auto-marked {
+    border-color: var(--color-auto-mark);
+    box-shadow: 0 0 10px var(--color-auto-mark);
+}
 
-        .board-card-number {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            font-weight: bold;
-            padding: 2px 5px;
-            border-radius: 50%;
-            font-size: 12px;
-            z-index: 2;
-        }
+.board-card.auto-marked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background-color: var(--color-auto-mark);
+    border-radius: 50%;
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0);
+    animation: markAnimation 0.3s forwards;
+}
 
-        @keyframes markAnimation {
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-            }
-        }
-        
-        .board-message {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: var(--color-primary);
-            color: var(--color-bg-dark);
-            border-radius: 8px;
-            font-weight: bold;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        .board-message.show {
-            display: block;
-            opacity: 1;
-        }
+.board-card-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    z-index: 2;
+}
 
-        .firebase-status {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .status-connected {
-            background-color: #4CAF50;
-            color: white;
-        }
-        
-        .status-disconnected {
-            background-color: #F44336;
-            color: white;
-        }
-        
-        .status-icon {
-            font-size: 16px;
-        }
+@keyframes markAnimation {
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
 
-        .player-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: rgba(0, 104, 71, 0.2);
-            border-radius: 8px;
-        }
-        
-        .player-tag {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .player1-tag {
-            background-color: var(--color-primary);
-            color: white;
-        }
-        
-        .otrojugador-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .otrojugador-tag {
-            background-color: var(--color-otrojugador);
-            color: white;
-        }
-        
-        .connection-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .dot-connected {
-            background-color: #4CAF50;
-        }
-        
-        .dot-disconnected {
-            background-color: #F44336;
-        }
+.board-message {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border-radius: 8px;
+    font-weight: bold;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    font-size: 1rem;
+}
 
-        .card-sobrante {
-            background-color: rgba(255, 68, 68, 0.2);
-            border-color: var(--color-sobrante) !important;
-        }
+.board-message.show {
+    display: block;
+    opacity: 1;
+}
 
-        .countdown-timer {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-            z-index: 5;
-        }
+.firebase-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
 
-        @keyframes flipIn {
-            0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
-            100% { transform: rotateY(0deg) scale(1); opacity: 1; }
-        }
-        .flip-animation { animation: flipIn 0.6s ease forwards; }
+.status-connected {
+    background-color: #4CAF50;
+    color: white;
+}
 
-        @keyframes celebrate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .celebrate { animation: celebrate 0.5s ease-in-out 3; }
+.status-disconnected {
+    background-color: #F44336;
+    color: white;
+}
 
-        .game-status {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
+.status-icon {
+    font-size: 16px;
+}
 
-        .winner-announcement {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            border: 3px solid gold;
-            z-index: 1000;
-            text-align: center;
-            display: none;
-        }
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: rgba(0, 104, 71, 0.2);
+    border-radius: 8px;
+}
 
-        .winner-announcement h2 {
-            color: gold;
-            margin-bottom: 15px;
-        }
+.player-tag {
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
 
-        /* Añade esto en la sección de estilos */
-        #clearMarksBtn {
-        background: linear-gradient(45deg, #ff6b6b, #c8102e);
-        box-shadow: 0 4px 10px rgba(200, 16, 46, 0.4);
-        }
+.player1-tag {
+    background-color: var(--color-primary);
+    color: white;
+}
 
-        #clearMarksBtn:hover {
-        box-shadow: 0 6px 15px rgba(200, 16, 46, 0.6);
-        }
+.otrojugador-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        @media (max-width: 768px) {
-            .loteria-container {
-                padding: 15px;
-                margin: 20px auto;
-            }
-            h1 {
-                font-size: 2.5rem;
-            }
-            .main-content {
-                flex-direction: column;
-                gap: 20px;
-            }
-            .controls-wrapper {
-                gap: 10px;
-            }
-            .controls, .controls-secondary, .slide-controls {
-                flex-direction: column;
-                gap: 10px;
-            }
-            .btn {
-                width: 100%;
-                min-width: unset;
-            }
-            .carta-selector {
-                width: 100%;
-            }
-            .carta {
-                width: 280px;
-                height: 380px;
-                padding: 15px;
-            }
-            .carta-imagen {
-                width: 100%;
-                height: 100%;
-            }
-            .cards-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            }
-            
-            .firebase-status {
-                bottom: 10px;
-                right: 10px;
-                left: 10px;
-                justify-content: center;
-            }
-            
-            .auto-mark-control {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
+.otrojugador-tag {
+    background-color: var(--color-otrojugador);
+    color: white;
+}
+
+.connection-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-connected {
+    background-color: #4CAF50;
+}
+
+.dot-disconnected {
+    background-color: #F44336;
+}
+
+.card-sobrante {
+    background-color: rgba(255, 68, 68, 0.2);
+    border-color: var(--color-sobrante) !important;
+}
+
+.countdown-timer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    z-index: 5;
+}
+
+@keyframes flipIn {
+    0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+    100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+.flip-animation { animation: flipIn 0.6s ease forwards; }
+
+@keyframes celebrate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.celebrate { animation: celebrate 0.5s ease-in-out 3; }
+
+.game-status {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.winner-announcement {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    border: 3px solid gold;
+    z-index: 1000;
+    text-align: center;
+    display: none;
+    min-width: 400px;
+}
+
+.winner-announcement h2 {
+    color: gold;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+/* Añade esto en la sección de estilos */
+#clearMarksBtn {
+    background: linear-gradient(45deg, #ff6b6b, #c8102e);
+    box-shadow: 0 4px 10px rgba(200, 16, 46, 0.4);
+}
+
+#clearMarksBtn:hover {
+    box-shadow: 0 6px 15px rgba(200, 16, 46, 0.6);
+}
+
+@media (max-width: 768px) {
+    .loteria-container {
+        padding: 15px;
+        margin: 15px auto;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+    
+    .main-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .caller-section, .board-section {
+        min-width: unset;
+        width: 100%;
+    }
+    
+    .carta {
+        width: 250px;
+        height: 330px;
+        margin-bottom: 20px;
+    }
+    
+    .drawn-cards-list {
+        margin-top: 20px;
+        padding: 15px;
+    }
+    
+    .cards-grid {
+        max-height: 250px;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+    
+    .controls-wrapper {
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .btn {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        min-width: 120px;
+    }
+    
+    .game-status {
+        padding: 12px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .player-info {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .firebase-status {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        font-size: 12px;
+        padding: 8px 12px;
+        justify-content: center;
+    }
+    
+    .winner-announcement {
+        min-width: 300px;
+        padding: 15px;
+    }
+    
+    .winner-announcement h2 {
+        font-size: 1.5rem;
+    }
+}
+</style>
 </head>
 <body>
     <div id="particles-js"></div>
@@ -780,66 +819,65 @@
         </div>
         
         <div class="main-content">
-            <div class="caller-section">
-                <div class="controls-wrapper">
-                    <div class="controls">
-                        <select class="carta-selector" id="cartaSelector">
-                            <option value="">Selecciona una carta</option>
-                        </select>
-                        <button class="btn" id="randomBtn">Carta Aleatoria</button>
-                    </div>
-
-                    <div class="controls-secondary">
-                        <button class="btn" id="shuffleBtn">Barajear</button>
-                        <button class="btn" id="slideBtn">Correr Cartas</button>
-                        <button class="btn" id="stopBtn" disabled>Detener</button>
-                    </div>
-
-                    <div class="slide-controls">
-                        <div class="slide-speed">
-                            <label for="slideSpeed">Velocidad:</label>
-                            <input type="range" id="slideSpeed" min="2000" max="10000" step="500" value="5000">
-                            <span id="speedValue">5.0s</span>
-                        </div>
-                        
-                        <div class="auto-mark-control">
-                            <label for="autoMarkToggle">
-                                <input type="checkbox" id="autoMarkToggle"> Notificación automática
-                            </label>
-                            <input type="range" id="autoMarkTime" min="1" max="10" step="1" value="3" disabled>
-                            <span id="autoMarkTimeValue">3s</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="carta-display">
-                    <div class="carta" id="cartaDisplay">
-                        <img class="carta-imagen" id="cartaImagen" src="" alt="Carta de lotería">
-                        <div class="countdown-timer" id="countdownTimer" style="display: none;">3</div>
-                    </div>
-                </div>
-
-                <div class="drawn-cards-list">
-                    <h3>Cartas ya Sacadas</h3>
-                    <div class="cards-grid" id="cardsGrid"></div>
-                </div>
+    <div class="caller-section">
+        <div class="controls-wrapper">
+            <div class="controls">
+                <select class="carta-selector" id="cartaSelector">
+                    <option value="">Selecciona una carta</option>
+                </select>
+                <button class="btn" id="randomBtn">Carta Aleatoria</button>
             </div>
 
-            <div class="board-section">
-                <div class="board-container">
-                    <h3>Mesa de Ejemplo</h3>
-                    <div class="board-grid" id="playerBoard">
-                    </div>
-                    <div class="board-controls">
-                    <button class="btn" id="distributeBtn">Generar Mi Mesa</button>
-                    <button class="btn" id="clearMarksBtn">Limpiar Mesa</button>
-                    <button class="btn" id="resetGameBtn">Reiniciar Juego</button>
-                    <a href="otrojugador.html" class="btn" id="secondPlayerLink">Abrir Otro Jugador</a> <!-- Aqui es para que otro jugador pueden haber muchos jugadores en la partida -->
+            <div class="controls-secondary">
+                <button class="btn" id="shuffleBtn">Barajear</button>
+                <button class="btn" id="slideBtn">Correr Cartas</button>
+                <button class="btn" id="stopBtn" disabled>Detener</button>
+            </div>
+
+            <div class="slide-controls">
+                <div class="slide-speed">
+                    <label for="slideSpeed">Velocidad:</label>
+                    <input type="range" id="slideSpeed" min="2000" max="10000" step="500" value="5000">
+                    <span id="speedValue">5.0s</span>
                 </div>
-                    <div class="board-message" id="boardMessage"></div>
+                
+                <div class="auto-mark-control">
+                    <label for="autoMarkToggle">
+                        <input type="checkbox" id="autoMarkToggle"> Notificación automática
+                    </label>
+                    <input type="range" id="autoMarkTime" min="1" max="10" step="1" value="3" disabled>
+                    <span id="autoMarkTimeValue">3s</span>
                 </div>
             </div>
         </div>
+
+        <div class="carta-display">
+            <div class="carta" id="cartaDisplay">
+                <img class="carta-imagen" id="cartaImagen" src="" alt="Carta de lotería">
+                <div class="countdown-timer" id="countdownTimer" style="display: none;">3</div>
+            </div>
+        </div>
+
+        <div class="drawn-cards-list">
+            <h3>Cartas ya Sacadas</h3>
+            <div class="cards-grid" id="cardsGrid"></div>
+        </div>
+    </div>
+    
+    <div class="board-section">
+        <div class="board-container">
+            <h3>Mesa de Ejemplo</h3>
+            <div class="board-grid" id="playerBoard"></div>
+            <div class="board-controls">
+                <button class="btn" id="distributeBtn">Generar Mi Mesa</button>
+                <button class="btn" id="clearMarksBtn">Limpiar Mesa</button>
+                <button class="btn" id="resetGameBtn">Reiniciar Juego</button>
+                <a href="otrojugador.html" class="btn" id="secondPlayerLink">Abrir Otro Jugador</a>
+            </div>
+            <div class="board-message" id="boardMessage"></div>
+        </div>
+    </div>
+</div>
     </div>
 
     <canvas id="confetti-canvas"></canvas>

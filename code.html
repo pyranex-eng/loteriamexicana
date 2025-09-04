@@ -1,0 +1,256 @@
+    function showWinner(message, tipoRonda, patron) {
+        let mensajeDetallado = message;
+        // Añadir detalles del patrón si está disponible
+        if (patron) {
+            if (patron.includes('horizontal')) {
+                const fila = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
+            } else if (patron.includes('vertical')) {
+                const columna = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea vertical ${columna} completa!`;
+            } else if (patron === 'diagonal-principal') {
+                mensajeDetallado = "¡Diagonal principal completa!";
+            } else if (patron === 'diagonal-secundaria') {
+                mensajeDetallado = "¡Diagonal secundaria completa!";
+            } else if (patron === 'cuatro-esquinas') {
+                mensajeDetallado = "¡Cuatro esquinas completas!";
+            } else if (patron.includes('cuadrado')) {
+                const partes = patron.split('-');
+                const fila = parseInt(partes[1]) + 1;
+                const columna = parseInt(partes[2]) + 1;
+                mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+            } else if (patron === 'carton-lleno') {
+                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
+            }
+        }
+
+        winnerText.textContent = mensajeDetallado;
+
+        // Configurar el texto del botón según la ronda
+        // El botón del jugador solo debe "aceptar" el anuncio, no controlar el juego.
+        if (tipoRonda === 'primera') {
+            continueBtn.textContent = 'Aceptar y esperar al Cantor';
+        } else {
+            continueBtn.textContent = 'Aceptar y esperar al Cantor';
+        }
+
+        winnerAnnouncement.style.display = 'block';
+
+        // Disparar confeti
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+        });
+
+        // Guardar en Firebase que hay un ganador con detalles del patrón
+        // Se asegura que el jugador sea "otrojugador"
+        database.ref('game/winner').set({
+            player: "otrojugador", // Asegúrate de que el jugador sea "otrojugador"
+            message: mensajeDetallado,
+            ronda: tipoRonda,
+            patron: patron,
+            timestamp: Date.now()
+        });
+    }
+
+    function verificarPatronesPrimeraRonda() {
+        // Lógica para verificar líneas horizontales
+        for (let i = 0; i < 4; i++) {
+            if (playerBoard[i*4].marcado && playerBoard[i*4+1].marcado &&
+                playerBoard[i*4+2].marcado && playerBoard[i*4+3].marcado) {
+                patronGanador = `horizontal-${i}`;
+                showWinner("¡Lotería!", 'primera', patronGanador); // Pasa el patrón
+                return true;
+            }
+        }
+
+        // Lógica para verificar líneas verticales
+        for (let i = 0; i < 4; i++) {
+            if (playerBoard[i].marcado && playerBoard[i+4].marcado &&
+                playerBoard[i+8].marcado && playerBoard[i+12].marcado) {
+                patronGanador = `vertical-${i}`;
+                showWinner("¡Lotería!", 'primera', patronGanador); // Pasa el patrón
+                return true;
+            }
+        }
+
+        // Lógica para verificar diagonal principal
+        if (playerBoard[0].marcado && playerBoard[5].marcado &&
+            playerBoard[10].marcado && playerBoard[15].marcado) {
+            patronGanador = 'diagonal-principal';
+            showWinner("¡Lotería!", 'primera', patronGanador); // Pasa el patrón
+            return true;
+        }
+
+        // Lógica para verificar diagonal secundaria
+        if (playerBoard[3].marcado && playerBoard[6].marcado &&
+            playerBoard[9].marcado && playerBoard[12].marcado) {
+            patronGanador = 'diagonal-secundaria';
+            showWinner("¡Lotería!", 'primera', patronGanador); // Pasa el patrón
+            return true;
+        }
+
+        // Lógica para verificar cuatro esquinas
+        if (playerBoard[0].marcado && playerBoard[3].marcado &&
+            playerBoard[12].marcado && playerBoard[15].marcado) {
+            patronGanador = 'cuatro-esquinas';
+            showWinner("¡Lotería!", 'primera', patronGanador); // Pasa el patrón
+            return true;
+        }
+
+        // Lógica para verificar cuadrados (2x2)
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                const index = row * 4 + col;
+                if (playerBoard[index].marcado && playerBoard[index+1].marcado &&
+                    playerBoard[index+4].marcado && playerBoard[index+5].marcado) {
+                    patronGanador = `cuadrado-${row}-${col}`;
+                    showWinner("¡Lotería!", 'primera', patronGanador); // Pasa el patrón
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function verificarCartonLleno() {
+        // Verificar si todas las cartas están marcadas
+        for (let i = 0; i < playerBoard.length; i++) {
+            if (!playerBoard[i].marcado) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+// Función para mostrar el anuncio de ganador
+function showWinner(message, tipoRonda, patron) {
+        let mensajeDetallado = message;
+        // Añadir detalles del patrón si está disponible
+        if (patron) {
+            if (patron.includes('horizontal')) {
+                const fila = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
+            } else if (patron.includes('vertical')) {
+                const columna = parseInt(patron.split('-')[1]) + 1;
+                mensajeDetallado = `¡Línea vertical ${columna} completa!`;
+            } else if (patron.includes('diagonal-principal')) {
+                mensajeDetallado = "¡Diagonal principal completa!";
+            } else if (patron.includes('diagonal-secundaria')) {
+                mensajeDetallado = "¡Diagonal secundaria completa!";
+            } else if (patron.includes('cuatro-esquinas')) {
+                mensajeDetallado = "¡Cuatro esquinas completas!";
+            } else if (patron.includes('cuadrado')) {
+                const partes = patron.split('-');
+                const fila = parseInt(partes[1]) + 1;
+                const columna = parseInt(partes[2]) + 1;
+                mensajeDetallado = `¡Cuadrado completo (fila ${fila}, columna ${columna})!`;
+            } else if (patron === 'carton-lleno') {
+                mensajeDetallado = "¡Cartón lleno! ¡Lotería!";
+            }
+        }
+
+        winnerText.textContent = mensajeDetallado;
+
+        // Configurar el texto del botón según la ronda
+        // El botón del jugador solo debe "aceptar" el anuncio, no controlar el juego.
+        if (tipoRonda === 'primera') {
+            continueBtn.textContent = 'Aceptar y esperar al cantor';
+        } else {
+            continueBtn.textContent = 'Aceptar y esperar al cantor';
+        }
+
+        winnerAnnouncement.style.display = 'block';
+
+        // Disparar confeti
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+        });
+
+        // Guardar en Firebase que hay un ganador con detalles del patrón
+        // Se asegura que el jugador sea "otrojugador"
+        database.ref('game/winner').set({
+            player: "otrojugador", // Asegúrate de que el jugador sea "otrojugador"
+            message: mensajeDetallado,
+            ronda: tipoRonda,
+            patron: patron,
+            timestamp: Date.now()
+        });
+    }
+
+    function verificarPatronesPrimeraRonda() {
+    // Lógica para verificar líneas horizontales
+    for (let i = 0; i < 4; i++) {
+        if (playerBoard[i*4].marcado && playerBoard[i*4+1].marcado &&
+            playerBoard[i*4+2].marcado && playerBoard[i*4+3].marcado) {
+            patronGanador = `horizontal-${i}`;
+            showWinner("¡Línea horizontal completa!", 'primera');
+            return true;
+        }
+    }
+
+    // Lógica para verificar líneas verticales
+    for (let i = 0; i < 4; i++) {
+        if (playerBoard[i].marcado && playerBoard[i+4].marcado &&
+            playerBoard[i+8].marcado && playerBoard[i+12].marcado) {
+            patronGanador = `vertical-${i}`;
+            showWinner("¡Línea vertical completa!", 'primera');
+            return true;
+        }
+    }
+
+    // Lógica para verificar diagonal principal
+    if (playerBoard[0].marcado && playerBoard[5].marcado &&
+        playerBoard[10].marcado && playerBoard[15].marcado) {
+        patronGanador = 'diagonal-principal';
+        showWinner("¡Diagonal completa!", 'primera');
+        return true;
+    }
+
+    // Lógica para verificar diagonal secundaria
+    if (playerBoard[3].marcado && playerBoard[6].marcado &&
+        playerBoard[9].marcado && playerBoard[12].marcado) {
+        patronGanador = 'diagonal-secundaria';
+        showWinner("¡Diagonal completa!", 'primera');
+        return true;
+    }
+
+    // Lógica para verificar cuatro esquinas
+    if (playerBoard[0].marcado && playerBoard[3].marcado &&
+        playerBoard[12].marcado && playerBoard[15].marcado) {
+        patronGanador = 'cuatro-esquinas';
+        showWinner("¡Cuatro esquinas completas!", 'primera');
+        return true;
+    }
+
+    // Lógica para verificar cuadrados (2x2)
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            const index = row * 4 + col;
+            if (playerBoard[index].marcado && playerBoard[index+1].marcado &&
+                playerBoard[index+4].marcado && playerBoard[index+5].marcado) {
+                patronGanador = `cuadrado-${row}-${col}`;
+                showWinner("¡Cuadrado completo!", 'primera');
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function verificarCartonLleno() {
+    // Verificar si todas las cartas están marcadas
+    for (let i = 0; i < playerBoard.length; i++) {
+        if (!playerBoard[i].marcado) {
+            return false;
+        }
+    }
+    return true;
+}
