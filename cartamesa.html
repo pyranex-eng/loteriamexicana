@@ -775,6 +775,56 @@ h1 {
         font-size: 1.5rem;
     }
 }
+/* -------- Avatar modal (pegar en <style>) -------- */
+.avatar-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.75);
+    display: none; /* se abre por JS */
+    justify-content: center;
+    align-items: center;
+    z-index: 10010;
+}
+.avatar-content {
+    background: var(--color-bg-container, #1e1e1e);
+    padding: 22px;
+    border-radius: 12px;
+    width: 92%;
+    max-width: 520px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 2px solid var(--color-primary, #006847);
+    text-align: center;
+}
+.avatar-content h3 { color: var(--color-primary, #006847); margin-bottom: 12px; }
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 12px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 6px;
+}
+.avatar-item {
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition: transform .12s ease, box-shadow .12s;
+}
+.avatar-item:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+.avatar-item.selected { outline: 3px solid rgba(0,104,71,0.18); transform: scale(1.03); background: rgba(0,104,71,0.06); }
+.avatar-icon { font-size: 26px; }
+.avatar-name { font-size: 12px; color: var(--color-text-light, #f0f0f0); text-align:center; }
+.avatar-actions { margin-top: 12px; display:flex; gap:10px; justify-content:center; }
+
 </style>
 </head>
 <body>
@@ -801,6 +851,20 @@ h1 {
         <h2 id="winnerText">¡Felicidades! ¡Has ganado! La Primera Ronda 1/2</h2>
         <button class="btn" id="newGameBtn">Continuar la carta llena</button>
     </div>
+
+    <!-- AVATAR MODAL: pegar antes de .loteria-container -->
+<div id="avatarModal" class="avatar-modal" aria-hidden="true">
+  <div class="avatar-content" role="dialog" aria-labelledby="avatarTitle">
+    <h3 id="avatarTitle">Selecciona tu avatar</h3>
+    <p style="color:var(--color-text-light); margin:0 0 10px;">Haz clic en un avatar y presiona "Comenzar".</p>
+    <div class="avatar-grid" id="avatarGrid"></div>
+    <div class="avatar-actions">
+      <button class="btn" id="submitAvatarBtn">Comenzar</button>
+      <button class="btn" id="skipAvatarBtn" type="button">Omitir</button>
+    </div>
+  </div>
+</div>
+
 
     <div class="loteria-container">
         <h1>Lotería Mexicana - Cantor</h1>
@@ -2083,6 +2147,120 @@ function marcarCartasSobrantes() {
     // También marcar visualmente en la lista si es necesario
     // (Aquí podrías añadir lógica adicional si quieres resaltar de otra forma)
 }
+
+/* -------- Avatar UI (pegar al final del script) -------- */
+if (!window._avatarUIInjected) {
+  window._avatarUIInjected = true;
+
+  // Si no tienes la lista 'avatares', la creamos (si ya existe, la usamos)
+  if (typeof window.avatares === 'undefined') {
+  window.avatares = [
+  { id: 1, icono: "fas fa-feather-alt", nombre: "Quetzalcóatl", color: "#4CAF50" },
+  { id: 2, icono: "fas fa-sun", nombre: "Huitzilopochtli", color: "#FF5722" },
+  { id: 3, icono: "fas fa-cloud-showers-heavy", nombre: "Tláloc", color: "#2196F3" },
+  { id: 4, icono: "fas fa-mask", nombre: "Tezcatlipoca", color: "#000000" },
+  { id: 5, icono: "fas fa-gem", nombre: "Chalchiuhtlicue", color: "#00BCD4" },
+  { id: 6, icono: "fas fa-drumstick-bite", nombre: "Cihuacóatl", color: "#607D8B" },
+  { id: 7, icono: "fas fa-corn", nombre: "Xilonen", color: "#FFEB3B" },
+  { id: 8, icono: "fas fa-seedling", nombre: "Xipe Totec", color: "#8B4513" },
+  { id: 9, icono: "fas fa-fire", nombre: "Xiuhtecuhtli", color: "#FF9800" },
+  { id: 10, icono: "fas fa-skull", nombre: "Mictlantecuhtli", color: "#9E9E9E" },
+  { id: 11, icono: "fas fa-moon", nombre: "Ixchel", color: "#673AB7" },
+  { id: 12, icono: "fas fa-volcano", nombre: "Tonatiuh", color: "#FFD700" },
+  { id: 13, icono: "fas fa-ankh", nombre: "Coatlicue", color: "#A1887F" },
+  { id: 14, icono: "fas fa-feather-pointed", nombre: "Xochipilli", color: "#FF4081" },
+  { id: 15, icono: "fas fa-anchor", nombre: "Tlacotl", color: "#006400" },
+  { id: 16, icono: "fas fa-star", nombre: "Citlalicue", color: "#E0E0E0" }
+];
+  }
+
+  // Elementos
+  const avatarModal = document.getElementById('avatarModal');
+  const avatarGrid = document.getElementById('avatarGrid');
+  const submitAvatarBtn = document.getElementById('submitAvatarBtn');
+  const skipAvatarBtn = document.getElementById('skipAvatarBtn');
+
+  // Si no existe la variable global selectedAvatar, la inicializamos (no rompe si ya existe)
+  if (typeof window.selectedAvatar === 'undefined') window.selectedAvatar = null;
+
+  function buildAvatarGrid() {
+    if (!avatarGrid) return;
+    avatarGrid.innerHTML = '';
+    window.avatares.forEach(av => {
+      const el = document.createElement('div');
+      el.className = 'avatar-item';
+      el.dataset.id = av.id;
+      el.innerHTML = `
+        <div class="avatar-icon" style="color:${av.color}"><i class="${av.icono}"></i></div>
+        <div class="avatar-name">${av.nombre}</div>
+      `;
+      el.addEventListener('click', () => {
+        // Deseleccionar
+        avatarGrid.querySelectorAll('.avatar-item').forEach(x => x.classList.remove('selected'));
+        el.classList.add('selected');
+        window.selectedAvatar = av;
+      });
+      avatarGrid.appendChild(el);
+    });
+  }
+
+  function openAvatarModal() {
+    if (!avatarModal) return;
+    avatarModal.style.display = 'flex';
+    avatarModal.setAttribute('aria-hidden','false');
+  }
+  function closeAvatarModal() {
+    if (!avatarModal) return;
+    avatarModal.style.display = 'none';
+    avatarModal.setAttribute('aria-hidden','true');
+  }
+
+  function applyAvatarSelection() {
+    if (!window.selectedAvatar) {
+      // si tienes showBoardMessage úsalo, sino alert para no romper
+      if (typeof showBoardMessage === 'function') {
+        showBoardMessage('Selecciona un avatar antes de continuar', 'error');
+      } else {
+        alert('Selecciona un avatar antes de continuar');
+      }
+      return;
+    }
+    // Actualiza playerName (usa la variable global de tu archivo)
+    if (typeof window.playerName === 'undefined') window.playerName = window.selectedAvatar.nombre;
+    else window.playerName = window.selectedAvatar.nombre;
+
+    // Actualiza la etiqueta en la UI (si existe)
+    const tag = document.querySelector('.player-tag.player1-tag');
+    if (tag) tag.textContent = `${window.playerName} (Tú)`;
+
+    // Opcional: guarda la selección en Firebase si tu archivo tiene 'database' y 'playerId'
+    try {
+      if (typeof database !== 'undefined' && typeof playerId !== 'undefined') {
+        database.ref(`players/${playerId}`).set({
+          name: window.playerName,
+          avatar: window.selectedAvatar.id,
+          timestamp: Date.now()
+        });
+      }
+    } catch(e) { /* no romper si algo falla */ }
+
+    closeAvatarModal();
+    if (typeof showBoardMessage === 'function') showBoardMessage(`¡Bienvenido ${window.playerName}!`, 'success');
+  }
+
+  // Botones
+  if (submitAvatarBtn) submitAvatarBtn.addEventListener('click', applyAvatarSelection);
+  if (skipAvatarBtn) skipAvatarBtn.addEventListener('click', () => { closeAvatarModal(); });
+
+  // Construir y abrir modal en carga (no modifica tu initApp)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { buildAvatarGrid(); openAvatarModal(); });
+  } else {
+    buildAvatarGrid(); openAvatarModal();
+  }
+}
+
+
     </script>
 </body>
 </html>
