@@ -666,6 +666,106 @@
             font-size: 0.9rem;
         }
     }
+    /* Estilos para el modal de selección de avatar */
+.avatar-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001; /* Asegura que esté por encima de todo */
+}
+
+.avatar-content {
+    background-color: var(--color-bg-container);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border: 2px solid var(--color-primary);
+    box-sizing: border-box;
+}
+
+.avatar-content h3 {
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.avatar-content p {
+    color: var(--color-text-light);
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.avatar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.avatar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.avatar-item.selected {
+    background-color: var(--color-primary);
+    transform: scale(1.05);
+}
+
+.avatar-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.avatar-name {
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.avatar-content .btn {
+    width: auto;
+    min-width: 180px;
+    padding: 12px 30px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .avatar-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .avatar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .avatar-icon {
+        font-size: 2rem;
+    }
+}
 </style>
 </head>
 <body>
@@ -693,15 +793,17 @@
         <button class="btn" id="continueBtn">Continuar</button>
     </div>
 
-    <!-- Modal para solicitar el nombre del jugador -->
-    <div id="playerNameModal" class="player-name-modal">
-        <div class="player-name-content">
-            <h3>¡Bienvenido a la Lotería Mexicana!</h3>
-            <p>Por favor, ingresa tu nombre o apodo para continuar:</p>
-            <input type="text" id="playerNameInput" placeholder="Un Emogi" maxlength="15">
-            <button class="btn" id="submitNameBtn">¡Comenzar a Jugar!</button>
+    <!-- Modal para selección de avatar -->
+<div id="avatarModal" class="avatar-modal">
+    <div class="avatar-content">
+        <h3>¡Bienvenido a la Lotería Mexicana!</h3>
+        <p>Selecciona tu avatar para comenzar a jugar:</p>
+        <div class="avatar-grid" id="avatarGrid">
+            <!-- Los avatares se generarán dinámicamente con JavaScript -->
         </div>
+        <button class="btn" id="submitAvatarBtn">¡Comenzar a Jugar!</button>
     </div>
+</div>
 
     <div class="loteria-container">
         <h1>Lotería Mexicana - Jugador</h1>
@@ -772,6 +874,26 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // Definir los avatares disponibles
+    const avatares = [
+    { id: 1, icono: "fas fa-dragon", nombre: "Dragón", color: "#FF5733" },
+    { id: 2, icono: "fas fa-crown", nombre: "Realeza", color: "#FFD700" },
+    { id: 3, icono: "fas fa-feather-alt", nombre: "Pluma", color: "#A1887F" },
+    { id: 4, icono: "fas fa-moon", nombre: "Luna", color: "#9E9E9E" },
+    { id: 5, icono: "fas fa-sun", nombre: "Sol", color: "#FFC107" },
+    { id: 6, icono: "fas fa-star", nombre: "Estrella", color: "#E0E0E0" },
+    { id: 7, icono: "fas fa-heart", nombre: "Corazón", color: "#E91E63" },
+    { id: 8, icono: "fas fa-gem", nombre: "Gema", color: "#4FC3F7" },
+    { id: 9, icono: "fas fa-mask", nombre: "Máscara", color: "#673AB7" },
+    { id: 10, icono: "fas fa-bolt", nombre: "Rayo", color: "#FFEB3B" },
+    { id: 11, icono: "fas fa-tree", nombre: "Árbol", color: "#4CAF50" },
+    { id: 12, icono: "fas fa-fire", nombre: "Fuego", color: "#FF5722" },
+    { id: 13, icono: "fas fa-water", nombre: "Agua", color: "#2196F3" },
+    { id: 14, icono: "fas fa-snowflake", nombre: "Nieve", color: "#90CAF9" },
+    { id: 15, icono: "fas fa-paw", nombre: "Garrita", color: "#795548" },
+    { id: 16, icono: "fas fa-rocket", nombre: "Cohete", color: "#9C27B0" }
+    ];
+
         const cartasLoteria = [
             { numero: 1, nombre: "El Gallo", imagen: "LoteriaEstampas/pagina1_img0.jpeg", descripcion: "Simboliza la vigilancia y la valentía." },
             { numero: 2, nombre: "El Diablito", imagen: "LoteriaEstampas/pagina2_img0.jpeg", descripcion: "Representa la tentación y el mal." },
@@ -830,15 +952,17 @@
         ];
 
         // Variables globales
-        let playerBoard = [];
-        let isConnected = false;
-        let callerConnected = false;
-        let drawnCardsCount = 0;
-        let gamePaused = false;
-        let rondaActual = 'primera';
-        let patronGanador = null;
-        let playerId = null; // Nuevo: ID único para este jugador
-        let playerName = 'Jugador'; // Nuevo: Nombre/apodo del jugador 
+let playerBoard = [];
+let isConnected = false;
+let callerConnected = false;
+let drawnCardsCount = 0;
+let gamePaused = false;
+let rondaActual = 'primera';
+let patronGanador = null;
+let playerId = null; // ID único para este jugador
+let selectedAvatar = null; // Avatar seleccionado
+let playerName = 'Jugador'; // Nombre del avatar seleccionado
+
 
         // Referencias a elementos DOM
         const playerBoardElement = document.getElementById('playerBoard');
@@ -860,6 +984,10 @@
         const playerNameInput = document.getElementById('playerNameInput');
         const submitNameBtn = document.getElementById('submitNameBtn');
         const playerTagElement = document.querySelector('.player-tag.otrojugador-tag'); // Para actualizar el apodo en la interfaz
+        // Nuevas referencias para el modal de avatar
+const avatarModal = document.getElementById('avatarModal');
+const avatarGrid = document.getElementById('avatarGrid');
+const submitAvatarBtn = document.getElementById('submitAvatarBtn');
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
@@ -871,12 +999,64 @@
 
         // Inicializar la aplicación
 function initApp() {
-    // Mostrar el modal del nombre al inicio
-    playerNameModal.style.display = 'flex';
-    playerNameInput.focus(); // Poner el foco en el input
+    // Mostrar el modal de avatar al inicio
+    initAvatarSelection();
     
     // Configurar el tablero vacío inicialmente
     createEmptyBoard();
+}
+
+// Inicializar la selección de avatar
+function initAvatarSelection() {
+    // Generar la cuadrícula de avatares
+    avatares.forEach(avatar => {
+        const avatarElement = document.createElement('div');
+        avatarElement.classList.add('avatar-item');
+        avatarElement.dataset.id = avatar.id;
+        
+        avatarElement.innerHTML = `
+            <div class="avatar-icon" style="color: ${avatar.color}">
+                <i class="${avatar.icono}"></i>
+            </div>
+            <div class="avatar-name">${avatar.nombre}</div>
+        `;
+        
+        avatarElement.addEventListener('click', () => {
+            // Deseleccionar cualquier avatar previamente seleccionado
+            document.querySelectorAll('.avatar-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Seleccionar el avatar actual
+            avatarElement.classList.add('selected');
+            selectedAvatar = avatar;
+        });
+        
+        avatarGrid.appendChild(avatarElement);
+    });
+    
+    // Configurar el botón de envío
+    submitAvatarBtn.addEventListener('click', submitAvatar);
+}
+
+// Función para enviar el avatar seleccionado
+function submitAvatar() {
+    if (!selectedAvatar) {
+        alert('Por favor selecciona un avatar para continuar.');
+        return;
+    }
+    
+    // Guardar el nombre del avatar como nombre del jugador
+    playerName = selectedAvatar.nombre;
+    playerTagElement.textContent = `${playerName} (Tú)`; // Actualiza el apodo en la interfaz
+    avatarModal.style.display = 'none'; // Oculta el modal
+    
+    // Generar un ID único para el jugador
+    playerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
+    // Ahora que tenemos el avatar, podemos registrar al jugador
+    registerPlayer();
+    showBoardMessage(`¡Bienvenido, ${playerName}! Esperando al cantor...`, "info");
 }
 
         // Configurar event listeners
@@ -888,14 +1068,6 @@ function setupEventListeners() {
         // El jugador solo espera a que el cantor continue
         if (rondaActual === 'primera') {
             statusText.textContent = 'Esperando a que el cantor continue...';
-        }
-    });
-
-    // Event listeners para el modal del nombre
-    submitNameBtn.addEventListener('click', submitPlayerName);
-    playerNameInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            submitPlayerName();
         }
     });
 
