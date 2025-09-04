@@ -1060,27 +1060,26 @@
             distributeBtn.addEventListener('click', distribuirMesas);
             resetGameBtn.addEventListener('click', reiniciarJuego);
             newGameBtn.addEventListener('click', function() {
-    if (rondaActual === 'segunda') { // Si estamos en la segunda ronda y se presiona "Nuevo Juego"
-        // Esto significa que el juego ha terminado y se quiere empezar uno nuevo
-        // Aquí se puede añadir una confirmación si se desea antes de un reinicio completo
-        if (confirm("¿Estás seguro de que quieres iniciar un nuevo juego? Esto reiniciará las cartas y limpiará los tableros.")) {
-            // Reinicio completo: barajear cartas y limpiar fichas
-            barajearCartas(); // Esto reinicia las cartas disponibles y sacadas
-            rondaActual = 'primera'; // Resetear la ronda
-            database.ref('game/ronda').set('primera'); // Resetear la ronda en Firebase
-            database.ref('game/winner').remove(); // Limpiar el ganador en Firebase
-            database.ref('game/paused').set(false); // Despausar el juego en Firebase
+    if (rondaActual === 'primera') {
+        // Si estamos en la primera ronda y se presiona el botón, pasar a la segunda
+        reiniciarJuego();
+    } else {
+        // Si estamos en la segunda ronda, hacer un reinicio completo
+        if (confirm("¿Estás seguro de que quieres iniciar un nuevo juego? Esto reiniciará todo el juego.")) {
+            // Reinicio completo
+            barajearCartas();
+            rondaActual = 'primera';
+            database.ref('game/ronda').set('primera');
+            database.ref('game/winner').remove();
+            database.ref('game/paused').set(false);
             statusText.textContent = 'Preparando juego...';
-            newGameBtn.textContent = 'Continuar la carta llena'; // Restaurar texto inicial del botón
-            gamePaused = false; // Despausar el juego localmente
-            slideBtn.disabled = false; // Habilitar controles
+            newGameBtn.textContent = 'Continuar la carta llena';
+            gamePaused = false;
+            slideBtn.disabled = false;
             randomBtn.disabled = false;
             cartaSelector.disabled = false;
+            winnerAnnouncement.style.display = 'none';
         }
-    } else {
-        // Si no estamos en la segunda ronda (es decir, estamos en la primera y se ganó),
-        // la función reiniciarJuego() ya maneja el paso a la segunda ronda.
-        reiniciarJuego();
     }
 });
 
@@ -1517,13 +1516,15 @@ function verificarCartonLleno() {
             const velocidad = parseInt(slideSpeed.value);
             
             intervaloCartas = setInterval(() => {
-                if (cartasDisponibles.length === 0) {
-                    detenerDesfileCartas();
-                    return;
-                }
-                
-                sacarCartaAleatoria();
-            }, velocidad);
+    if (cartasDisponibles.length === 0) {
+        detenerDesfileCartas();
+        // Mostrar mensaje indicando que se terminaron las cartas
+        showBoardMessage("¡Todas las cartas han sido cantadas!", "info");
+        return;
+    }
+    
+    sacarCartaAleatoria();
+}, velocidad);
         }
 
         function reanudarJuego() {
@@ -1543,17 +1544,24 @@ function verificarCartonLleno() {
 }
 
         // Detener el desfile de cartas
-        function detenerDesfileCartas() {
-
-            if (gamePaused) {
-            showBoardMessage("El juego está pausado. Reinicia para continuar.", "error");
-            return;
+        // En la función detenerDesfileCartas()
+function detenerDesfileCartas() {
+    // No verificar si el juego está pausado cuando se detiene automáticamente
+    // ya que puede ser llamado al finalizar el desfile
+    
+    clearInterval(intervaloCartas);
+    slideBtn.disabled = false;
+    stopBtn.disabled = true;
+    
+    // Si se detuvo porque se acabaron las cartas, ofrecer barajear
+    if (cartasDisponibles.length === 0) {
+        setTimeout(() => {
+            if (confirm("Todas las cartas han sido cantadas. ¿Deseas barajear de nuevo?")) {
+                barajearCartas(true); // Pasar true para indicar que es automático
             }
-
-            clearInterval(intervaloCartas);
-            slideBtn.disabled = false;
-            stopBtn.disabled = true;
-        }
+        }, 1000);
+    }
+}
 
         // Iniciar cuenta regresiva para marcado automático
         function startAutoMarkCountdown() {
@@ -1972,12 +1980,13 @@ function distribuirMesas() {
     showBoardMessage("Nueva mesa generada", "success");
 }
 
+// Modificar la función reiniciarJuego
 function reiniciarJuego() {
     if (rondaActual === 'primera') {
         // Lógica para continuar a la segunda ronda
         rondaActual = 'segunda';
         winnerAnnouncement.style.display = 'none';
-        gamePaused = true;
+        gamePaused = false; // Reactivar el juego
         statusText.textContent = 'Segunda ronda: Carta llena';
 
         // Habilitar controles
@@ -1992,21 +2001,23 @@ function reiniciarJuego() {
 
         showBoardMessage("Segunda ronda: ¡Carta llena!", "success");
         newGameBtn.textContent = 'Nuevo Juego'; // Cambiar el texto del botón para la siguiente fase
-    } else {
-        // DESPUÉS DE LA SEGUNDA RONDA: NO barajear cartas, solo cambiar estado
-        rondaActual = 'finalizado'; // Nuevo estado para indicar que el juego terminó
-        database.ref('game/ronda').set('finalizado');
-        database.ref('game/winner').remove();
-        database.ref('game/paused').set(true); // Pausar el juego definitivamente
-        
-        statusText.textContent = 'Juego finalizado - Cartón lleno completado';
-        newGameBtn.textContent = 'Nuevo Juego';
-        gamePaused = true;
-        
-        // Marcar cartas sobrantes en rojo
-        marcarCartasSobrantes();
-        
-        showBoardMessage("¡Juego completado! Las cartas sobrantes se muestran en rojo", "success");
+    } else if (rondaActual === 'segunda') {
+        // DESPUÉS DE LA SEGUNDA RONDA: Reinicio completo
+        if (confirm("¿Estás seguro de que quieres iniciar un nuevo juego? Esto reiniciará las cartas y limpiará los tableros.")) {
+            // Reinicio completo
+            barajearCartas();
+            rondaActual = 'primera';
+            database.ref('game/ronda').set('primera');
+            database.ref('game/winner').remove();
+            database.ref('game/paused').set(false);
+            statusText.textContent = 'Preparando juego...';
+            newGameBtn.textContent = 'Continuar la carta llena';
+            gamePaused = false;
+            slideBtn.disabled = false;
+            randomBtn.disabled = false;
+            cartaSelector.disabled = false;
+            winnerAnnouncement.style.display = 'none';
+        }
     }
 }
 
