@@ -866,30 +866,26 @@ h1 {
 </div>
 
 
-    <!-- Eliminado duplicado de controles y carta -->
-                </div>
-                <div class="auto-mark-control">
-                    <label for="autoMarkToggle">
-                        <input type="checkbox" id="autoMarkToggle"> Notificación automática
-                    </label>
-                    <input type="range" id="autoMarkTime" min="1" max="10" step="1" value="3" disabled>
-                    <span id="autoMarkTimeValue">3s</span>
-                </div>
+    <div class="loteria-container">
+        <h1>Lotería Mexicana - Cantor</h1>
+        
+        <div class="game-status" id="gameStatus">
+            <div>Estado: <span id="statusText">Preparando juego...</span></div>
+            <div>Jugadores conectados: <span id="playersCount">0</span></div>
+        </div>
+        
+        <div class="player-info">
+            <div class="player-tag player1-tag">Cantor (Tú)</div>
+            <div class="otrojugador-info">
+                <span class="player-tag otrojugador-tag">Jugadores</span>
+                <span class="connection-dot dot-disconnected" id="playersStatus"></span>
             </div>
         </div>
-        <div class="carta-display">
-            <div class="carta" id="cartaDisplay">
-                <img class="carta-imagen" id="cartaImagen" src="" alt="Carta de lotería">
-                <div class="countdown-timer" id="countdownTimer" style="display: none;">3</div>
-            </div>
-        </div>
-        <!-- Tabla de cartas ya sacadas -->
-        <div class="drawn-cards-list">
-            <h3>Cartas ya Sacadas</h3>
-            <div class="cards-grid" id="cardsGrid"></div>
-        </div>
-        <!-- Chat en tiempo real debajo de la tabla -->
-        <div class="chat-container" style="margin-top:18px;background:rgba(0,0,0,0.18);border-radius:10px;padding:12px 8px;max-width:420px;width:100%;">
+        
+        <div class="main-content">
+    <div class="caller-section">
+        <!-- Chat en tiempo real -->
+        <div class="chat-container" style="margin-bottom:24px;background:rgba(0,0,0,0.18);border-radius:10px;padding:12px 8px;max-width:420px;width:100%;">
             <h3 style="color:var(--color-primary);margin-bottom:8px;font-size:1.2rem;">Chat de la Sala</h3>
             <div id="chatMessages" style="height:140px;overflow-y:auto;background:#181818;border-radius:8px;padding:8px 6px 8px 6px;margin-bottom:8px;font-size:0.98rem;"></div>
             <form id="chatForm" style="display:flex;gap:6px;">
