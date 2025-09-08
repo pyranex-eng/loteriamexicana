@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Salas de Juego - Lotería Mexicana</title>
+  <script type="module" src="firebase-conn.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f8f8; }
+    .sala-lista, .crear-sala { margin: 2em auto; max-width: 400px; background: #fff; padding: 1.5em; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
+    .sala { padding: 0.5em 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .sala:last-child { border-bottom: none; }
+    button { background: #007bff; color: #fff; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    input[type=text] { width: 70%; padding: 0.5em; border: 1px solid #ccc; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center">Salas de Juego</h2>
+  <div class="crear-sala">
+    <input type="text" id="nuevaSala" placeholder="Nombre de la sala" />
+    <button id="btnCrearSala">Crear Sala</button>
+  </div>
+  <div class="sala-lista">
+    <h3>Salas disponibles</h3>
+    <div id="listaSalas"></div>
+  </div>
+  <script type="module">
+    import { db, ref, onValue, set, push, get, child } from './firebase-conn.js';
+
+    const listaSalas = document.getElementById('listaSalas');
+    const btnCrearSala = document.getElementById('btnCrearSala');
+    const nuevaSala = document.getElementById('nuevaSala');
+
+
+    // Mostrar salas activas con botones para ambos roles
+    function mostrarSalas() {
+      onValue(ref(db, 'salas'), (snapshot) => {
+        listaSalas.innerHTML = '';
+        const salas = snapshot.val() || {};
+        Object.keys(salas).forEach(salaId => {
+          const sala = salas[salaId];
+          const div = document.createElement('div');
+          div.className = 'sala';
+          div.innerHTML = `<span>${sala.nombre}</span> 
+            <button data-id="${salaId}" data-role="jugador">Entrar como Jugador</button>
+            <button data-id="${salaId}" data-role="cantor">Entrar como Cantor</button>`;
+          div.querySelector('button[data-role="jugador"]').onclick = () => entrarSala(salaId, sala.nombre, false);
+          div.querySelector('button[data-role="cantor"]').onclick = () => entrarSala(salaId, sala.nombre, true);
+          listaSalas.appendChild(div);
+        });
+        if (Object.keys(salas).length === 0) {
+          listaSalas.innerHTML = '<em>No hay salas activas.</em>';
+        }
+      });
+    }
+
+    mostrarSalas();
+
+    // Crear sala
+    btnCrearSala.onclick = async () => {
+      const nombre = nuevaSala.value.trim();
+      if (!nombre) return alert('Ponle nombre a la sala');
+      // Verifica si ya existe una sala con ese nombre
+      const snapshot = await get(ref(db, 'salas'));
+      const salas = snapshot.val() || {};
+      const existe = Object.values(salas).some(s => s.nombre === nombre);
+      if (existe) return alert('Ya existe una sala con ese nombre');
+      const salaRef = push(ref(db, 'salas'));
+      await set(salaRef, { nombre });
+      nuevaSala.value = '';
+    };
+
+    // Entrar a sala, con validación de cantor único
+    async function entrarSala(salaId, salaNombre, esCantor = false) {
+      localStorage.setItem('salaId', salaId);
+      localStorage.setItem('salaNombre', salaNombre);
+      localStorage.setItem('esCantor', esCantor.toString());
+      if (esCantor) {
+        // Verificar si ya hay cantor conectado en la sala
+        const cantorSnap = await get(child(ref(db), `salas/${salaId}/cantorConnected`));
+        if (cantorSnap.exists() && cantorSnap.val() === true) {
+          alert('Ya hay un cantor en esta sala. Solo puede haber uno.');
+          return;
+        }
+        // Marcar cantor como conectado (se puede sobreescribir en cartamesa.html también)
+        await set(ref(db, `salas/${salaId}/cantorConnected`), true);
+        window.location.href = 'cartamesa.html';
+      } else {
+        window.location.href = 'otrojugador.html';
+      }
+    }
+  </script>
+</body>
+</html>
