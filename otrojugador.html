@@ -1,15 +1,33 @@
 <script>
+const salaId = localStorage.getItem('salaId') || 'default';
+
 // --- Presencia robusta para jugadores ---
 function setupPresence() {
-    const salaId = localStorage.getItem('salaId') || 'default';
     const connectedRef = firebase.database().ref('.info/connected');
     connectedRef.on('value', function(snap) {
         if (snap.val() === true && playerId) {
             // Marcar presencia del jugador
             const refPlayer = database.ref(`salas/${salaId}/players/${playerId}`);
-            refPlayer.set({name: playerName, connected: true, timestamp: Date.now()});
+            refPlayer.set({name: playerName, connected: true, timestamp: Date.now(), avatarId: selectedAvatar ? selectedAvatar.id : 1});
             refPlayer.onDisconnect().remove();
-            // Al salir, limpiar chat y verificar si sala debe eliminarse
+
+            // Lógica para borrar la sala si es el último jugador (onDisconnect)
+            const refPlayers = database.ref(`salas/${salaId}/players`);
+            refPlayers.on('value', function(snapshot) {
+                const players = snapshot.val() || {};
+                // Si solo queda este jugador, programa el borrado de la sala al desconectarse
+                if (Object.keys(players).length === 1 && players[playerId]) {
+                    // Solo este jugador queda
+                    const salaRef = database.ref(`salas/${salaId}`);
+                    salaRef.onDisconnect().remove();
+                } else {
+                    // Si hay más de uno, cancela el onDisconnect de la sala
+                    const salaRef = database.ref(`salas/${salaId}`);
+                    salaRef.onDisconnect().cancel();
+                }
+            });
+
+            // Al salir, limpiar chat y verificar si sala debe eliminarse (por si acaso)
             window.addEventListener('beforeunload', () => {
                 database.ref(`salas/${salaId}/players/${playerId}`).remove();
                 database.ref(`salas/${salaId}/chat`).remove();
@@ -802,11 +820,10 @@ function setupPresence() {
     <div class="connections" id="connections"></div>
 
     <script>
-    // ...existing code...
     // --- Lista de usuarios conectados ---
     const userListContainer = document.getElementById('userListContainer');
     function listenAndRenderUserList() {
-        database.ref('game/players').on('value', function(snapshot) {
+        database.ref(`salas/${salaId}/players`).on('value', function(snapshot) {
             const players = snapshot.val() || {};
             // Filtrar solo conectados
             const connectedPlayers = Object.entries(players)
@@ -1677,7 +1694,7 @@ function loadBoardFromLocal(boardData) {
                 return;
             }
 
-            playerBoard[index].marcado = !playerBoard[index].marcado;
+            playerBoard[index].marcado = ! playerBoard[index].marcado;
 
             if (playerBoard[index].marcado) {
                 playerBoard[index].elemento.classList.add('marked');
@@ -1729,8 +1746,8 @@ function showWinner(message, tipoRonda, patron) {
     if (patron) {
         if (patron.includes('horizontal')) {
             const fila = parseInt(patron.split('-')[1]) + 1;
-            mensajeDetallado = `¡Línea horizontal ${fila} completa!`;
-        } else if (patron.includes('vertical')) {
+            mensajeDetallado = `¡Línea horizontal ${fila} completa!`;}
+         else if (patron.includes('vertical')) {
             const columna = parseInt(patron.split('-')[1]) + 1;
             mensajeDetallado = `¡Línea vertical ${columna} completa!`;
         } else if (patron === 'diagonal-principal') {
@@ -1749,35 +1766,68 @@ function showWinner(message, tipoRonda, patron) {
         }
     }
 
-    winnerText.textContent = mensajeDetallado;
-
-    if (tipoRonda === 'primera') {
-        continueBtn.textContent = 'Aceptar y esperar al Cantor';
-    } else {
-        continueBtn.textContent = 'Nuevo Juego';
-    }
-
-    winnerAnnouncement.style.display = 'block';
-
-    confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+    database.ref('game/winner').once('value').then(function(snapshot) {
+        const winnerData = snapshot.val();
+        if (winnerData && (winnerData.empate || (Array.isArray(winnerData.players) && winnerData.players.length > 1))) {
+            // Ya hay empate, agregar este jugador si no está
+            let players = winnerData.players || [];
+            let names = winnerData.names || [];
+            if (!players.includes(playerId)) {
+                players.push(playerId);
+                names.push(playerName);
+                database.ref('game/winner').set({
+                    empate: true,
+                    players: players,
+                    names: names,
+                    patron: patron,
+                    ronda: tipoRonda,
+                    timestamp: Date.now()
+                });
+            }
+            winnerText.textContent = `¡Empate entre ${names.join(', ')}!`;
+        } else if (winnerData && winnerData.player && winnerData.player !== playerId) {
+            // Ya hay un ganador diferente, crear empate con ambos
+            const players = [winnerData.player, playerId];
+            const names = [winnerData.name || 'Jugador', playerName];
+            database.ref('game/winner').set({
+                empate: true,
+                players: players,
+                names: names,
+                patron: patron,
+                ronda: tipoRonda,
+                timestamp: Date.now()
+            });
+            winnerText.textContent = `¡Empate entre ${names.join(', ')}!`;
+        } else if (winnerData && winnerData.player === playerId) {
+            // Este jugador ya es el ganador
+            winnerText.textContent = mensajeDetallado;
+        } else {
+            // No hay ganador, guardar este jugador como ganador
+            database.ref('game/winner').set({
+                player: playerId,
+                name: playerName,
+                message: mensajeDetallado,
+                ronda: tipoRonda,
+                patron: patron,
+                timestamp: Date.now()
+            });
+            winnerText.textContent = mensajeDetallado;
+        }
+        if (tipoRonda === 'primera') {
+            continueBtn.textContent = 'Aceptar y esperar al Cantor';
+        } else {
+            continueBtn.textContent = 'Nuevo Juego';
+        }
+        winnerAnnouncement.style.display = 'block';
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#c8102e', '#006847', '#ffde00', '#ffffff', '#000000']
+        });
+        database.ref('game/paused').set(true);
+        pauseGame();
     });
-
-    // Guardar en Firebase que hay un ganador con detalles del patrón
-    database.ref('game/winner').set({
-        player: playerId, // Ahora se envía el ID único del jugador
-        name: playerName, // También se envía el nombre del jugador
-        message: mensajeDetallado,
-        ronda: tipoRonda,
-        patron: patron,
-        timestamp: Date.now()
-    });
-
-    database.ref('game/paused').set(true);
-    pauseGame();
 }
 
         function verificarPatronesPrimeraRonda() {
