@@ -1048,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', listenAndRenderUserList);
                         database.ref(`salas/${salaId}/players/cantor`).once('value').then(snapPlayer => {
                             if (snapPlayer.exists() && snapPlayer.val().connected) {
                                 alert('Ya hay un cantor en esta sala. Solo puede haber uno.');
-                                window.location.href = 'index.html';
+                                window.location.href = 'salas.html';
                             } else {
                                 // No hay cantor real, limpiar flag y permitir acceso
                                 database.ref(`salas/${salaId}/cantorConnected`).set(false).then(() => {
